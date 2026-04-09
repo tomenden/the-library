@@ -1,3 +1,6 @@
+import { useState } from "react";
+import AddContentModal from "./AddContentModal";
+
 interface TopBarProps {
   readonly searchPlaceholder?: string;
   readonly showSearch?: boolean;
@@ -9,7 +12,10 @@ export default function TopBar({
   showSearch = true,
   showBrandName = false,
 }: TopBarProps) {
+  const [showAdd, setShowAdd] = useState(false);
+
   return (
+    <>
     <header className="flex justify-between items-center px-8 w-full sticky top-0 h-16 bg-background/80 backdrop-blur-2xl z-50">
       {showBrandName ? (
         <div className="flex items-center gap-4">
@@ -33,7 +39,10 @@ export default function TopBar({
       )}
 
       <div className="flex items-center gap-6 ml-8">
-        <button className="signature-gradient text-on-primary px-5 py-2 rounded-lg text-[0.6875rem] font-bold tracking-[0.05em] uppercase shadow-sm hover:opacity-90 transition-opacity">
+        <button
+          onClick={() => setShowAdd(true)}
+          className="signature-gradient text-on-primary px-5 py-2 rounded-lg text-[0.6875rem] font-bold tracking-[0.05em] uppercase shadow-sm hover:opacity-90 transition-opacity"
+        >
           Add Content
         </button>
         <div className="flex items-center gap-4 text-on-surface-variant">
@@ -46,5 +55,7 @@ export default function TopBar({
         </div>
       </div>
     </header>
+      {showAdd && <AddContentModal onClose={() => setShowAdd(false)} />}
+    </>
   );
 }
