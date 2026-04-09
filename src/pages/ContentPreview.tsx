@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import TagChip from "../components/TagChip";
@@ -11,6 +11,39 @@ export default function ContentPreview() {
   const item = useQuery(api.items.get, id ? { id: id as Id<"items"> } : "skip");
   const allTopics = useQuery(api.topics.list, {});
   const [notes, setNotes] = useState(item?.notes ?? "");
+
+  const updateStatus = useMutation(api.items.update);
+  const toggleFavorite = useMutation(api.items.toggleFavorite);
+  const saveNotes = useMutation(api.items.saveNotes);
+  const removeItem = useMutation(api.items.remove);
+
+  // Sync notes state when item loads from DB
+  useEffect(() => {
+    setNotes(item?.notes ?? "");
+  }, [item?.notes]);
+
+  async function handleMarkDone() {
+    if (!item || !id) return;
+    const newStatus = item.status === "done" ? "saved" : "done";
+    await updateStatus({ id: id as Id<"items">, status: newStatus });
+  }
+
+  async function handleToggleFavorite() {
+    if (!id) return;
+    await toggleFavorite({ id: id as Id<"items"> });
+  }
+
+  async function handleDelete() {
+    if (!id) return;
+    if (!confirm("Delete this item from your library?")) return;
+    await removeItem({ id: id as Id<"items"> });
+    navigate("/");
+  }
+
+  async function handleSaveNotes() {
+    if (!id) return;
+    await saveNotes({ id: id as Id<"items">, notes });
+  }
 
   const itemTopics =
     item && allTopics
@@ -157,24 +190,56 @@ export default function ContentPreview() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
+            {notes !== (item.notes ?? "") && (
+              <button
+                onClick={handleSaveNotes}
+                className="mt-2 text-[0.6875rem] font-bold uppercase tracking-wider text-primary-container hover:opacity-80"
+              >
+                Save Notes
+              </button>
+            )}
           </div>
 
           {/* Actions */}
           <div className="bg-surface-container-lowest rounded-xl editorial-shadow divide-y divide-outline-variant/20">
-            <button className="w-full flex items-center gap-3 px-5 py-4 text-on-surface hover:bg-surface-container-low transition-colors rounded-t-xl text-left">
+            <button
+              onClick={handleMarkDone}
+              className="w-full flex items-center gap-3 px-5 py-4 text-on-surface hover:bg-surface-container-low transition-colors rounded-t-xl text-left"
+            >
               <span
                 className="material-symbols-outlined text-primary-container"
-                style={{ fontVariationSettings: "'FILL' 1" }}
+                style={{ fontVariationSettings: item.status === "done" ? "'FILL' 1" : "'FILL' 0" }}
               >
                 check_circle
               </span>
-              <span className="text-sm font-medium">{consumedLabel}</span>
+              <span className="text-sm font-medium">
+                {item.status === "done"
+                  ? consumedLabel === "Mark as Read"
+                    ? "Read"
+                    : consumedLabel === "Mark as Watched"
+                      ? "Watched"
+                      : "Listened"
+                  : consumedLabel}
+              </span>
             </button>
-            <button className="w-full flex items-center gap-3 px-5 py-4 text-on-surface hover:bg-surface-container-low transition-colors text-left">
-              <span className="material-symbols-outlined text-on-surface-variant">star</span>
-              <span className="text-sm font-medium">Save to Favorites</span>
+            <button
+              onClick={handleToggleFavorite}
+              className="w-full flex items-center gap-3 px-5 py-4 text-on-surface hover:bg-surface-container-low transition-colors text-left"
+            >
+              <span
+                className="material-symbols-outlined text-on-surface-variant"
+                style={{ fontVariationSettings: item.isFavorite ? "'FILL' 1" : "'FILL' 0" }}
+              >
+                star
+              </span>
+              <span className="text-sm font-medium">
+                {item.isFavorite ? "Saved to Favorites" : "Save to Favorites"}
+              </span>
             </button>
-            <button className="w-full flex items-center gap-3 px-5 py-4 text-error hover:bg-error-container/20 transition-colors rounded-b-xl text-left">
+            <button
+              onClick={handleDelete}
+              className="w-full flex items-center gap-3 px-5 py-4 text-error hover:bg-error-container/20 transition-colors rounded-b-xl text-left"
+            >
               <span className="material-symbols-outlined text-error">delete</span>
               <span className="text-sm font-medium">Delete from Library</span>
             </button>
