@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Id } from "./_generated/dataModel";
 
@@ -99,3 +99,30 @@ async function removeTopicHandler(
 
   await ctx.db.delete(id);
 }
+
+export const listInternal = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) =>
+    ctx.db
+      .query("topics")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect(),
+});
+
+export const getInternal = internalQuery({
+  args: { id: v.id("topics"), userId: v.id("users") },
+  handler: async (ctx, { id, userId }) => {
+    const topic = await ctx.db.get(id);
+    if (!topic || topic.userId !== userId) return null;
+    return topic;
+  },
+});
+
+export const renameInternal = internalMutation({
+  args: { id: v.id("topics"), userId: v.id("users"), name: v.string() },
+  handler: async (ctx, { id, userId, name }) => {
+    const topic = await ctx.db.get(id);
+    if (!topic || topic.userId !== userId) throw new Error("Not found");
+    await ctx.db.patch(id, { name });
+  },
+});
