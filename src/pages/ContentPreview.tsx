@@ -29,6 +29,13 @@ export default function ContentPreview() {
 
   const savedDaysAgo = `Saved ${Math.floor((Date.now() - item._creationTime) / 86400000)} days ago`;
 
+  const consumedLabel =
+    item.contentType === "video"
+      ? "Mark as Watched"
+      : item.contentType === "podcast"
+        ? "Mark as Listened"
+        : "Mark as Read";
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Bar */}
@@ -161,11 +168,11 @@ export default function ContentPreview() {
               >
                 check_circle
               </span>
-              <span className="text-sm font-medium">Mark as Consumed</span>
+              <span className="text-sm font-medium">{consumedLabel}</span>
             </button>
             <button className="w-full flex items-center gap-3 px-5 py-4 text-on-surface hover:bg-surface-container-low transition-colors text-left">
               <span className="material-symbols-outlined text-on-surface-variant">star</span>
-              <span className="text-sm font-medium">Favorite Item</span>
+              <span className="text-sm font-medium">Save to Favorites</span>
             </button>
             <button className="w-full flex items-center gap-3 px-5 py-4 text-error hover:bg-error-container/20 transition-colors rounded-b-xl text-left">
               <span className="material-symbols-outlined text-error">delete</span>
