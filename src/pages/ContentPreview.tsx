@@ -11,6 +11,7 @@ export default function ContentPreview() {
   const item = useQuery(api.items.get, id ? { id: id as Id<"items"> } : "skip");
   const allTopics = useQuery(api.topics.list, {});
   const [notes, setNotes] = useState(item?.notes ?? "");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const updateStatus = useMutation(api.items.update);
   const toggleFavorite = useMutation(api.items.toggleFavorite);
@@ -34,10 +35,15 @@ export default function ContentPreview() {
   }
 
   async function handleDelete() {
-    if (!id) return;
+    if (!id || isDeleting) return;
     if (!confirm("Delete this item from your library?")) return;
-    await removeItem({ id: id as Id<"items"> });
-    navigate("/");
+    setIsDeleting(true);
+    try {
+      await removeItem({ id: id as Id<"items"> });
+      navigate("/");
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   async function handleSaveNotes() {
@@ -190,7 +196,7 @@ export default function ContentPreview() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
-            {notes !== (item.notes ?? "") && (
+            {notes !== (item.notes ?? "") && id && (
               <button
                 onClick={handleSaveNotes}
                 className="mt-2 text-[0.6875rem] font-bold uppercase tracking-wider text-primary-container hover:opacity-80"
@@ -238,10 +244,11 @@ export default function ContentPreview() {
             </button>
             <button
               onClick={handleDelete}
-              className="w-full flex items-center gap-3 px-5 py-4 text-error hover:bg-error-container/20 transition-colors rounded-b-xl text-left"
+              disabled={isDeleting}
+              className="w-full flex items-center gap-3 px-5 py-4 text-error hover:bg-error-container/20 transition-colors rounded-b-xl text-left disabled:opacity-50"
             >
               <span className="material-symbols-outlined text-error">delete</span>
-              <span className="text-sm font-medium">Delete from Library</span>
+              <span className="text-sm font-medium">{isDeleting ? "Deleting…" : "Delete from Library"}</span>
             </button>
           </div>
         </aside>
