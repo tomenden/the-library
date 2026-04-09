@@ -6,6 +6,9 @@ import SearchDiscovery from "./pages/SearchDiscovery";
 import ContentPreview from "./pages/ContentPreview";
 import HistoryArchive from "./pages/HistoryArchive";
 import ApiKeys from "./pages/ApiKeys";
+import Favorites from "./pages/Favorites";
+import UnreadItems from "./pages/UnreadItems";
+import FilteredItems from "./pages/FilteredItems";
 
 export default function App() {
   return (
@@ -22,6 +25,17 @@ export default function App() {
                 <Route path="/preview/:id" element={<ContentPreview />} />
                 <Route path="/archive" element={<HistoryArchive />} />
                 <Route path="/settings/api-keys" element={<ApiKeys />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/unread" element={<UnreadItems />} />
+                <Route path="/articles" element={
+                  <FilteredItems title="Articles" subtitle="Format" filter={{ contentType: "article" }} />
+                } />
+                <Route path="/videos" element={
+                  <FilteredItems title="Videos" subtitle="Format" filter={{ contentType: "video" }} />
+                } />
+                <Route path="/audio" element={
+                  <FilteredItems title="Audio" subtitle="Format" filter={{ contentType: "podcast" }} />
+                } />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </AuthGate>

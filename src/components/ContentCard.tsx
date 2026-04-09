@@ -20,12 +20,13 @@ export interface ContentItem {
 
 interface ContentCardProps {
   readonly item: ContentItem;
+  readonly onClick?: () => void;
 }
 
-export default function ContentCard({ item }: ContentCardProps) {
+export default function ContentCard({ item, onClick }: ContentCardProps) {
   const navigate = useNavigate();
 
-  const handleClick = () => navigate('/preview');
+  const handleClick = onClick ?? (() => navigate(`/preview/${item.id}`));
 
   if (item.isPodcast && !item.imageUrl) {
     // Text-only card (e.g. Spotify)
