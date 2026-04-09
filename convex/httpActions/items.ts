@@ -6,6 +6,9 @@ import { Id } from "../_generated/dataModel";
 const VALID_STATUSES = ["saved", "in_progress", "done"] as const;
 type Status = (typeof VALID_STATUSES)[number];
 
+const VALID_CONTENT_TYPES = ["article", "video", "podcast", "tweet", "newsletter"] as const;
+type ContentType = (typeof VALID_CONTENT_TYPES)[number];
+
 function extractId(request: Request): string | null {
   const seg = new URL(request.url).pathname.split("/").pop();
   return seg ?? null;
@@ -72,11 +75,22 @@ export const listItems = httpAction(async (ctx, request) => {
     | undefined;
   const q = reqUrl.searchParams.get("q") ?? undefined;
 
+  const rawContentType = reqUrl.searchParams.get("contentType") ?? undefined;
+  if (rawContentType !== undefined && !VALID_CONTENT_TYPES.includes(rawContentType as ContentType)) {
+    return errorResponse("Invalid contentType value", 400);
+  }
+  const contentType = rawContentType as ContentType | undefined;
+
+  const rawIsFavorite = reqUrl.searchParams.get("isFavorite") ?? undefined;
+  const isFavorite = rawIsFavorite === "true" ? true : rawIsFavorite === "false" ? false : undefined;
+
   const items = await ctx.runQuery(internal.items.listInternal, {
     userId: auth.userId,
     status,
     topicId,
     q,
+    contentType,
+    isFavorite,
   });
 
   return jsonResponse(items);

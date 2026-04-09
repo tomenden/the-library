@@ -15,7 +15,7 @@ The user generates API keys from Settings → API Keys in the app. Each key is s
 ## Base URL
 
 ```
-https://your-deployment.convex.site
+https://colorful-beagle-698.convex.site
 ```
 
 ---
@@ -36,6 +36,7 @@ An **item** represents one saved link.
 | `sourceName` | string? | Source platform, e.g. `"YouTube"`, `"Medium"` |
 | `imageUrl` | string? | Thumbnail URL |
 | `status` | enum | `saved` / `in_progress` / `done` — defaults to `saved` |
+| `isFavorite` | boolean? | Whether the item is starred as a favorite |
 | `notes` | string? | User-written context, e.g. `"suggested by Naval"` |
 | `topicIds` | string[] | IDs of associated topics |
 
@@ -74,10 +75,14 @@ Use `topicNames` (strings) instead of `topicIds` — the API resolves or creates
 Query params (all optional):
 - `status` — filter by `saved`, `in_progress`, or `done`
 - `topicId` — filter by topic ID
+- `contentType` — filter by `article`, `video`, `podcast`, `tweet`, or `newsletter`
+- `isFavorite` — filter by favorite status (`true` or `false`)
 - `q` — search title, summary, and notes
 
 ```
 GET /api/items?status=saved&q=productivity
+GET /api/items?isFavorite=true
+GET /api/items?contentType=video
 ```
 
 **Response:** `200 OK` — array of item objects.
