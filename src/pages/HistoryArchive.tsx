@@ -1,8 +1,42 @@
-import Sidebar from '../components/Sidebar';
-import TagChip from '../components/TagChip';
-import { archiveGroups } from '../data/mockData';
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import Sidebar from "../components/Sidebar";
+import TagChip from "../components/TagChip";
+
+type Item = NonNullable<ReturnType<typeof useQuery<typeof api.items.list>>>[number];
+
+function groupByDate(items: Item[]) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const lastWeekStart = new Date(today);
+  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+
+  const groups: Array<{ label: string; icon: string; entries: Item[] }> = [
+    { label: "Today", icon: "today", entries: [] },
+    { label: "Yesterday", icon: "history", entries: [] },
+    { label: "Last Week", icon: "date_range", entries: [] },
+    { label: "Older", icon: "archive", entries: [] },
+  ];
+
+  for (const item of items) {
+    const d = new Date(item._creationTime);
+    d.setHours(0, 0, 0, 0);
+    if (d.getTime() >= today.getTime()) groups[0].entries.push(item);
+    else if (d.getTime() >= yesterday.getTime()) groups[1].entries.push(item);
+    else if (d.getTime() >= lastWeekStart.getTime()) groups[2].entries.push(item);
+    else groups[3].entries.push(item);
+  }
+
+  return groups.filter((g) => g.entries.length > 0);
+}
 
 export default function HistoryArchive() {
+  const items = useQuery(api.items.list, { status: "done" });
+  const allItems = items ?? [];
+  const archiveGroups = groupByDate(allItems);
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
@@ -35,7 +69,6 @@ export default function HistoryArchive() {
         </header>
 
         <main className="p-8 max-w-4xl w-full">
-          {/* Page Header */}
           <div className="mb-8 flex justify-between items-start">
             <div>
               <h2 className="text-5xl font-headline font-light tracking-tight text-on-surface mb-2">The Archive</h2>
@@ -54,11 +87,23 @@ export default function HistoryArchive() {
             </div>
           </div>
 
-          {/* Archive Timeline */}
+          {items === undefined && (
+            <div className="flex justify-center py-20">
+              <span className="material-symbols-outlined animate-spin text-on-surface-variant">
+                progress_activity
+              </span>
+            </div>
+          )}
+
+          {items !== undefined && archiveGroups.length === 0 && (
+            <div className="text-center py-20">
+              <p className="text-on-surface-variant text-sm">No consumed items yet.</p>
+            </div>
+          )}
+
           <div className="space-y-12">
             {archiveGroups.map((group) => (
               <section key={group.label}>
-                {/* Group Header */}
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center">
                     <span className="material-symbols-outlined text-[18px] text-on-surface-variant">{group.icon}</span>
@@ -66,54 +111,31 @@ export default function HistoryArchive() {
                   <h3 className="text-2xl font-headline italic text-on-surface">{group.label}</h3>
                 </div>
 
-                {/* Entries */}
                 <div className="space-y-4 pl-5 border-l-2 border-outline-variant/30 ml-4">
                   {group.entries.map((entry) => (
                     <div
-                      key={entry.id}
+                      key={entry._id}
                       className="bg-surface-container-lowest rounded-xl p-5 editorial-shadow hover:bg-surface-container transition-colors cursor-pointer group flex gap-5"
                     >
                       {entry.imageUrl && (
                         <div className="w-24 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                          <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={entry.imageUrl} alt={entry.title} />
+                          <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={entry.imageUrl} alt={entry.title ?? ""} />
                         </div>
                       )}
                       <div className="flex-1">
                         <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-2">
-                          {entry.source}
+                          {entry.sourceName ?? ""}
                         </p>
                         <h4 className="font-headline text-lg text-on-surface leading-snug mb-1 group-hover:text-primary-container transition-colors">
-                          {entry.title}
+                          {entry.title ?? ""}
                         </h4>
-                        <p className="text-sm text-on-surface-variant/80 mb-3 line-clamp-1">{entry.description}</p>
+                        <p className="text-sm text-on-surface-variant/80 mb-3 line-clamp-1">{entry.summary ?? ""}</p>
                         <div className="flex flex-wrap gap-2">
-                          {entry.tags.map((tag) => <TagChip key={tag} label={tag} />)}
+                          {entry.notes && <TagChip label={entry.notes.substring(0, 20)} />}
                         </div>
                       </div>
                     </div>
                   ))}
-
-                  {/* Stats card for "Last Week" */}
-                  {group.stats && (
-                    <div className="bg-surface-container rounded-xl p-6 grid grid-cols-2 gap-6">
-                      <div className="text-center">
-                        <span className="material-symbols-outlined text-3xl text-on-surface-variant mb-2 block">timer</span>
-                        <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-1">
-                          Time Invested
-                        </p>
-                        <p className="text-3xl font-headline text-on-surface">{group.stats.timeInvested}</p>
-                        <p className="text-[0.6875rem] text-on-surface-variant mt-1">across {group.stats.itemCount} items</p>
-                      </div>
-                      <div className="text-center">
-                        <span className="material-symbols-outlined text-3xl text-on-surface-variant mb-2 block">auto_stories</span>
-                        <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-1">
-                          Items Read
-                        </p>
-                        <p className="text-3xl font-headline text-on-surface">{group.stats.itemCount}</p>
-                        <p className="text-[0.6875rem] text-on-surface-variant mt-1">last 7 days</p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </section>
             ))}
