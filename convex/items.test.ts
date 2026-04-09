@@ -172,3 +172,53 @@ test("removeInternal: deletes item", async () => {
   const item = await t.run(async (ctx) => ctx.db.get(id));
   expect(item).toBeNull();
 });
+
+test("toggleFavoriteInternal: toggles isFavorite on/off", async () => {
+  const t = convexTest(schema, modules);
+  const userId = await t.run(async (ctx) => {
+    return await ctx.db.insert("users", { name: "Test", email: "t@t.com" });
+  });
+  const id = await t.run(async (ctx) => {
+    return await ctx.db.insert("items", {
+      userId,
+      url: "https://example.com",
+      status: "saved" as const,
+      topicIds: [],
+      isFavorite: false,
+    });
+  });
+  await t.mutation(internal.items.toggleFavoriteInternal, { id, userId });
+  const after = await t.run(async (ctx) => ctx.db.get(id));
+  expect(after?.isFavorite).toBe(true);
+  await t.mutation(internal.items.toggleFavoriteInternal, { id, userId });
+  const after2 = await t.run(async (ctx) => ctx.db.get(id));
+  expect(after2?.isFavorite).toBe(false);
+});
+
+test("listInternal: filters by isFavorite", async () => {
+  const t = convexTest(schema, modules);
+  const userId = await t.run(async (ctx) => {
+    return await ctx.db.insert("users", { name: "Test", email: "t@t.com" });
+  });
+  await t.run(async (ctx) => {
+    await ctx.db.insert("items", { userId, url: "https://a.com", status: "saved" as const, topicIds: [], isFavorite: true });
+    await ctx.db.insert("items", { userId, url: "https://b.com", status: "saved" as const, topicIds: [], isFavorite: false });
+  });
+  const favs = await t.query(internal.items.listInternal, { userId, isFavorite: true });
+  expect(favs).toHaveLength(1);
+  expect(favs[0].url).toBe("https://a.com");
+});
+
+test("listInternal: filters by contentType", async () => {
+  const t = convexTest(schema, modules);
+  const userId = await t.run(async (ctx) => {
+    return await ctx.db.insert("users", { name: "Test", email: "t@t.com" });
+  });
+  await t.run(async (ctx) => {
+    await ctx.db.insert("items", { userId, url: "https://v.com", status: "saved" as const, topicIds: [], contentType: "video" as const });
+    await ctx.db.insert("items", { userId, url: "https://a.com", status: "saved" as const, topicIds: [], contentType: "article" as const });
+  });
+  const videos = await t.query(internal.items.listInternal, { userId, contentType: "video" as const });
+  expect(videos).toHaveLength(1);
+  expect(videos[0].url).toBe("https://v.com");
+});

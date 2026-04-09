@@ -30,6 +30,7 @@ export default defineSchema({
     status: statusValidator,
     notes: v.optional(v.string()),
     topicIds: v.array(v.id("topics")),
+    isFavorite: v.optional(v.boolean()),
   })
     .index("by_user", ["userId"])
     .index("by_user_status", ["userId", "status"]),

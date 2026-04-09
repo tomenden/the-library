@@ -11,6 +11,11 @@ export const list = query({
     status: v.optional(statusValidator),
     topicId: v.optional(v.id("topics")),
     q: v.optional(v.string()),
+    isFavorite: v.optional(v.boolean()),
+    contentType: v.optional(v.union(
+      v.literal("article"), v.literal("video"), v.literal("podcast"),
+      v.literal("tweet"), v.literal("newsletter"),
+    )),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -73,6 +78,28 @@ export const remove = mutation({
   },
 });
 
+export const toggleFavorite = mutation({
+  args: { id: v.id("items") },
+  handler: async (ctx, { id }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
+    const item = await ctx.db.get(id);
+    if (!item || item.userId !== userId) throw new Error("Not found");
+    await ctx.db.patch(id, { isFavorite: !(item.isFavorite ?? false) });
+  },
+});
+
+export const saveNotes = mutation({
+  args: { id: v.id("items"), notes: v.string() },
+  handler: async (ctx, { id, notes }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
+    const item = await ctx.db.get(id);
+    if (!item || item.userId !== userId) throw new Error("Not found");
+    await ctx.db.patch(id, { notes });
+  },
+});
+
 // ── Internal (called by HTTP actions with userId from API key) ─────────────
 
 export const createInternal = internalMutation({
@@ -96,6 +123,11 @@ export const listInternal = internalQuery({
     status: v.optional(statusValidator),
     topicId: v.optional(v.id("topics")),
     q: v.optional(v.string()),
+    isFavorite: v.optional(v.boolean()),
+    contentType: v.optional(v.union(
+      v.literal("article"), v.literal("video"), v.literal("podcast"),
+      v.literal("tweet"), v.literal("newsletter"),
+    )),
   },
   handler: async (ctx, args) => listHandler(ctx, args),
 });
@@ -128,6 +160,15 @@ export const removeInternal = internalMutation({
   handler: async (ctx, args) => removeHandler(ctx, args),
 });
 
+export const toggleFavoriteInternal = internalMutation({
+  args: { id: v.id("items"), userId: v.id("users") },
+  handler: async (ctx, { id, userId }) => {
+    const item = await ctx.db.get(id);
+    if (!item || item.userId !== userId) throw new Error("Not found");
+    await ctx.db.patch(id, { isFavorite: !(item.isFavorite ?? false) });
+  },
+});
+
 // ── Shared logic ───────────────────────────────────────────────────────────
 
 async function createHandler(ctx: any, args: any): Promise<Id<"items">> {
@@ -136,7 +177,7 @@ async function createHandler(ctx: any, args: any): Promise<Id<"items">> {
 }
 
 async function listHandler(ctx: any, args: any): Promise<any[]> {
-  const { userId, status, topicId, q } = args;
+  const { userId, status, topicId, q, isFavorite, contentType } = args;
   let items = await ctx.db
     .query("items")
     .withIndex("by_user", (q: any) => q.eq("userId", userId))
@@ -152,6 +193,12 @@ async function listHandler(ctx: any, args: any): Promise<any[]> {
         i.summary?.toLowerCase().includes(lower) ||
         i.notes?.toLowerCase().includes(lower)
     );
+  }
+  if (isFavorite !== undefined) {
+    items = items.filter((i: any) => (i.isFavorite ?? false) === isFavorite);
+  }
+  if (contentType !== undefined) {
+    items = items.filter((i: any) => i.contentType === contentType);
   }
   return items;
 }
