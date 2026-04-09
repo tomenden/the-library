@@ -1,6 +1,22 @@
 import { useNavigate } from 'react-router-dom';
-import type { ContentItem } from '../data/mockData';
 import TagChip from './TagChip';
+
+export interface ContentItem {
+  id: string;
+  source: string;
+  sourceIcon: 'description' | 'play_circle' | 'headphones';
+  title: string;
+  description: string;
+  tags: string[];
+  badge?: string;
+  imageUrl?: string;
+  isVideo?: boolean;
+  isPodcast?: boolean;
+  podcastMeta?: string;
+  pullQuote?: string;
+  tweetAuthor?: string;
+  tweetHandle?: string;
+}
 
 interface ContentCardProps {
   readonly item: ContentItem;
