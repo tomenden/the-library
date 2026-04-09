@@ -9,7 +9,13 @@ export default function ContentPreview() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const item = useQuery(api.items.get, id ? { id: id as Id<"items"> } : "skip");
+  const allTopics = useQuery(api.topics.list, {});
   const [notes, setNotes] = useState(item?.notes ?? "");
+
+  const itemTopics =
+    item && allTopics
+      ? allTopics.filter((t) => item.topicIds.includes(t._id))
+      : [];
 
   if (!item) {
     return (
@@ -128,8 +134,8 @@ export default function ContentPreview() {
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {([] as string[]).map((tag) => <TagChip key={tag} label={tag} />)}
-              {([] as string[]).length === 0 && (
+              {itemTopics.map((t) => <TagChip key={t._id} label={t.name} />)}
+              {itemTopics.length === 0 && (
                 <p className="text-sm text-on-surface-variant/60">No tags yet.</p>
               )}
             </div>

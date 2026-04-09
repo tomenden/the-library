@@ -105,13 +105,17 @@ export const updateItem = httpAction(async (ctx, request) => {
   const id = extractId<"items">(request);
   if (!id) return errorResponse("Bad request", 400);
 
-  const body = await request.json();
+  const { title, summary, status, notes, topicIds } = await request.json();
 
   try {
     await ctx.runMutation(internal.items.updateInternal, {
       id,
       userId: auth.userId,
-      ...body,
+      title,
+      summary,
+      status,
+      notes,
+      topicIds,
     });
   } catch (e) {
     return notFoundOrRethrow(e);
