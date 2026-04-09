@@ -3,12 +3,15 @@ import { internal } from "../_generated/api";
 import { authenticateRequest, jsonResponse, errorResponse } from "./middleware";
 import { Id } from "../_generated/dataModel";
 
+const VALID_STATUSES = ["saved", "in_progress", "done"] as const;
+type Status = (typeof VALID_STATUSES)[number];
+
 export const createItem = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);
 
   const body = await request.json();
-  const { topicNames, topicIds: _ignored, ...fields } = body;
+  const { url, title, summary, contentType, sourceName, imageUrl, notes, topicNames } = body;
 
   // Resolve topic names → IDs (create topics that don't exist yet)
   let topicIds: Id<"topics">[] = [];
@@ -24,7 +27,13 @@ export const createItem = httpAction(async (ctx, request) => {
   }
 
   const id = await ctx.runMutation(internal.items.createInternal, {
-    ...fields,
+    url,
+    title,
+    summary,
+    contentType,
+    sourceName,
+    imageUrl,
+    notes,
     userId: auth.userId,
     topicIds,
   });
@@ -41,12 +50,16 @@ export const listItems = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);
 
-  const url = new URL(request.url);
-  const status = (url.searchParams.get("status") ?? undefined) as any;
-  const topicId = (url.searchParams.get("topicId") ?? undefined) as
+  const reqUrl = new URL(request.url);
+  const rawStatus = reqUrl.searchParams.get("status") ?? undefined;
+  if (rawStatus !== undefined && !VALID_STATUSES.includes(rawStatus as Status)) {
+    return errorResponse("Invalid status value", 400);
+  }
+  const status = rawStatus as Status | undefined;
+  const topicId = (reqUrl.searchParams.get("topicId") ?? undefined) as
     | Id<"topics">
     | undefined;
-  const q = url.searchParams.get("q") ?? undefined;
+  const q = reqUrl.searchParams.get("q") ?? undefined;
 
   const items = await ctx.runQuery(internal.items.listInternal, {
     userId: auth.userId,
@@ -94,6 +107,7 @@ export const updateItem = httpAction(async (ctx, request) => {
     userId: auth.userId,
   });
 
+  if (!item) return errorResponse("Not found", 404);
   return jsonResponse(item);
 });
 
