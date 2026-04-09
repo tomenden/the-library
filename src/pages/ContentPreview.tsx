@@ -1,12 +1,27 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import TagChip from '../components/TagChip';
-import { contentPreviewArticle } from '../data/mockData';
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
+import TagChip from "../components/TagChip";
 
 export default function ContentPreview() {
   const navigate = useNavigate();
-  const [notes, setNotes] = useState('');
-  const article = contentPreviewArticle;
+  const { id } = useParams<{ id: string }>();
+  const item = useQuery(api.items.get, id ? { id: id as Id<"items"> } : "skip");
+  const [notes, setNotes] = useState(item?.notes ?? "");
+
+  if (!item) {
+    return (
+      <div className="flex min-h-screen bg-background items-center justify-center">
+        <span className="material-symbols-outlined animate-spin text-on-surface-variant">
+          progress_activity
+        </span>
+      </div>
+    );
+  }
+
+  const savedDaysAgo = `Saved ${Math.floor((Date.now() - item._creationTime) / 86400000)} days ago`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -14,7 +29,7 @@ export default function ContentPreview() {
       <header className="sticky top-0 z-50 flex items-center justify-between px-8 h-14 bg-background/80 backdrop-blur-2xl border-b border-outline-variant/20">
         <button
           className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors text-[0.6875rem] font-bold tracking-widest uppercase"
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Back to Gallery
@@ -22,7 +37,7 @@ export default function ContentPreview() {
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant">
             <span className="material-symbols-outlined text-[16px]">save</span>
-            {article.savedDaysAgo}
+            {savedDaysAgo}
           </span>
           <button className="text-on-surface-variant hover:text-on-surface transition-colors">
             <span className="material-symbols-outlined">more_vert</span>
@@ -34,89 +49,75 @@ export default function ContentPreview() {
         {/* Main Content */}
         <article>
           <p className="text-[0.6875rem] font-bold tracking-[0.1em] uppercase text-on-surface-variant mb-4">
-            {article.label}
+            {item.sourceName ?? "Article"}
           </p>
           <h1 className="text-4xl md:text-5xl font-headline font-light text-on-surface leading-tight mb-8">
-            {article.title}
+            {item.title ?? "Untitled"}
           </h1>
 
           {/* Metadata */}
           <div className="flex flex-wrap gap-8 mb-10">
             <div>
-              <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-1">Author</p>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-primary-fixed flex items-center justify-center text-[0.6rem] font-bold text-on-primary-fixed">
-                  JV
-                </div>
-                <span className="text-sm font-medium text-on-surface">{article.author}</span>
-              </div>
-            </div>
-            <div>
               <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-1">Publication</p>
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[14px] text-on-surface-variant">language</span>
-                <span className="text-sm font-medium text-on-surface uppercase tracking-wider">{article.publication}</span>
+                <span className="text-sm font-medium text-on-surface uppercase tracking-wider">{item.sourceName ?? ""}</span>
               </div>
             </div>
             <div>
-              <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-1">Published</p>
-              <span className="text-sm font-medium text-on-surface">{article.publishedDate}</span>
+              <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-1">Saved</p>
+              <span className="text-sm font-medium text-on-surface">{new Date(item._creationTime).toLocaleDateString()}</span>
             </div>
           </div>
 
           {/* Hero Image */}
-          <div className="rounded-xl overflow-hidden mb-10 aspect-video">
-            <img className="w-full h-full object-cover" src={article.imageUrl} alt={article.title} />
-          </div>
+          {item.imageUrl && (
+            <div className="rounded-xl overflow-hidden mb-10 aspect-video">
+              <img className="w-full h-full object-cover" src={item.imageUrl} alt={item.title ?? ""} />
+            </div>
+          )}
 
-          {/* Pull Quote */}
-          <blockquote className="my-10 px-0">
-            <p className="text-lg font-headline italic text-on-surface-variant leading-relaxed border-l-4 border-primary-fixed-dim pl-6">
-              {article.pullQuote}
-            </p>
-          </blockquote>
+          {/* Pull Quote / Summary */}
+          {item.summary && (
+            <blockquote className="my-10 px-0">
+              <p className="text-lg font-headline italic text-on-surface-variant leading-relaxed border-l-4 border-primary-fixed-dim pl-6">
+                {item.summary}
+              </p>
+            </blockquote>
+          )}
 
           {/* Body */}
           <div className="prose max-w-none">
-            <p className="text-base text-on-surface leading-relaxed">{article.body}</p>
+            <p className="text-base text-on-surface leading-relaxed">{item.summary ?? ""}</p>
           </div>
 
           {/* Continue Reading */}
-          <button className="mt-12 flex items-center gap-2 text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface hover:text-primary-container transition-colors border-b border-on-surface/30 pb-0.5">
+          <a
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-12 flex items-center gap-2 text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface hover:text-primary-container transition-colors border-b border-on-surface/30 pb-0.5 w-fit"
+          >
             Continue Reading Original Source
             <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-          </button>
+          </a>
         </article>
 
         {/* Right Panel */}
         <aside className="space-y-6">
           {/* External Link */}
           <a
-            href="#"
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center justify-between p-4 signature-gradient text-on-primary rounded-xl group hover:opacity-90 transition-opacity"
           >
             <div>
               <p className="text-[0.6875rem] font-bold tracking-widest uppercase opacity-70 mb-1">External Link</p>
-              <p className="font-medium">{article.externalLink}</p>
+              <p className="font-medium truncate max-w-[200px]">{item.url}</p>
             </div>
             <span className="material-symbols-outlined">open_in_new</span>
           </a>
-
-          {/* Collection */}
-          <div className="bg-surface-container-lowest rounded-xl p-5 editorial-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant">Collection</p>
-              <button className="text-[0.6875rem] font-bold tracking-widest uppercase text-primary-container hover:underline">
-                Change
-              </button>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-primary text-[16px]">architecture</span>
-              </div>
-              <span className="text-sm font-medium text-on-surface">{article.collection}</span>
-            </div>
-          </div>
 
           {/* Tags */}
           <div className="bg-surface-container-lowest rounded-xl p-5 editorial-shadow">
@@ -127,7 +128,10 @@ export default function ContentPreview() {
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {article.tags.map((tag) => <TagChip key={tag} label={tag} />)}
+              {([] as string[]).map((tag) => <TagChip key={tag} label={tag} />)}
+              {([] as string[]).length === 0 && (
+                <p className="text-sm text-on-surface-variant/60">No tags yet.</p>
+              )}
             </div>
           </div>
 
@@ -140,18 +144,6 @@ export default function ContentPreview() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
-          </div>
-
-          {/* Stats */}
-          <div className="bg-surface-container-lowest rounded-xl p-5 editorial-shadow grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-1">Word Count</p>
-              <p className="text-sm font-medium text-on-surface">{article.wordCount}</p>
-            </div>
-            <div>
-              <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-1">Read Time</p>
-              <p className="text-sm font-medium text-on-surface">{article.readTime}</p>
-            </div>
           </div>
 
           {/* Actions */}
