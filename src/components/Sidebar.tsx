@@ -77,6 +77,13 @@ export default function Sidebar({ showAddButton = false }: SidebarProps) {
       )}
 
       <div className="mt-auto pt-6 border-t border-outline-variant/30">
+        <NavLink
+          to="/settings/api-keys"
+          className={navLinkClass("/settings/api-keys")}
+        >
+          <span className="material-symbols-outlined text-[20px]">key</span>
+          <span className={labelClass}>API Keys</span>
+        </NavLink>
         <a href="#" className="flex items-center gap-3 px-8 py-3 text-on-surface-variant hover:text-primary-container hover:bg-surface-container transition-colors">
           <span className="material-symbols-outlined text-[20px]">settings</span>
           <span className={labelClass}>Settings</span>
