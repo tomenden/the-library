@@ -3,9 +3,9 @@ import { internal } from "../_generated/api";
 import { authenticateRequest, jsonResponse, errorResponse } from "./middleware";
 import { Id } from "../_generated/dataModel";
 
-function extractId<T extends string>(request: Request): Id<T> | null {
+function extractId(request: Request): string | null {
   const seg = new URL(request.url).pathname.split("/").pop();
-  return seg ? (seg as Id<T>) : null;
+  return seg ?? null;
 }
 
 function notFoundOrRethrow(e: unknown): Response {
@@ -51,7 +51,7 @@ export const updateTopic = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);
 
-  const id = extractId<"topics">(request);
+  const id = extractId(request) as Id<"topics"> | null;
   if (!id) return errorResponse("Bad request", 400);
 
   const { name } = await request.json();
@@ -82,7 +82,7 @@ export const deleteTopic = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);
 
-  const id = extractId<"topics">(request);
+  const id = extractId(request) as Id<"topics"> | null;
   if (!id) return errorResponse("Bad request", 400);
 
   try {

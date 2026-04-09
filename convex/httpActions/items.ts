@@ -6,9 +6,9 @@ import { Id } from "../_generated/dataModel";
 const VALID_STATUSES = ["saved", "in_progress", "done"] as const;
 type Status = (typeof VALID_STATUSES)[number];
 
-function extractId<T extends string>(request: Request): Id<T> | null {
+function extractId(request: Request): string | null {
   const seg = new URL(request.url).pathname.split("/").pop();
-  return seg ? (seg as Id<T>) : null;
+  return seg ?? null;
 }
 
 function notFoundOrRethrow(e: unknown): Response {
@@ -86,7 +86,7 @@ export const getItem = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);
 
-  const id = extractId<"items">(request);
+  const id = extractId(request) as Id<"items"> | null;
   if (!id) return errorResponse("Bad request", 400);
 
   const item = await ctx.runQuery(internal.items.getInternal, {
@@ -102,7 +102,7 @@ export const updateItem = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);
 
-  const id = extractId<"items">(request);
+  const id = extractId(request) as Id<"items"> | null;
   if (!id) return errorResponse("Bad request", 400);
 
   const { title, summary, status, notes, topicIds } = await request.json();
@@ -134,7 +134,7 @@ export const deleteItem = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);
 
-  const id = extractId<"items">(request);
+  const id = extractId(request) as Id<"items"> | null;
   if (!id) return errorResponse("Bad request", 400);
 
   try {
