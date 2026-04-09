@@ -3,6 +3,17 @@ import { internal } from "../_generated/api";
 import { authenticateRequest, jsonResponse, errorResponse } from "./middleware";
 import { Id } from "../_generated/dataModel";
 
+function extractId<T extends string>(request: Request): Id<T> | null {
+  const seg = new URL(request.url).pathname.split("/").pop();
+  return seg ? (seg as Id<T>) : null;
+}
+
+function notFoundOrRethrow(e: unknown): Response {
+  const msg = e instanceof Error ? e.message : "";
+  if (msg === "Not found") return errorResponse("Not found", 404);
+  throw e;
+}
+
 export const listTopics = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);
@@ -40,7 +51,9 @@ export const updateTopic = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);
 
-  const id = new URL(request.url).pathname.split("/").pop() as Id<"topics">;
+  const id = extractId<"topics">(request);
+  if (!id) return errorResponse("Bad request", 400);
+
   const { name } = await request.json();
   if (!name || typeof name !== "string") {
     return errorResponse("name is required", 400);
@@ -52,8 +65,8 @@ export const updateTopic = httpAction(async (ctx, request) => {
       userId: auth.userId,
       name,
     });
-  } catch {
-    return errorResponse("Not found", 404);
+  } catch (e) {
+    return notFoundOrRethrow(e);
   }
 
   const topic = await ctx.runQuery(internal.topics.getInternal, {
@@ -69,7 +82,8 @@ export const deleteTopic = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);
 
-  const id = new URL(request.url).pathname.split("/").pop() as Id<"topics">;
+  const id = extractId<"topics">(request);
+  if (!id) return errorResponse("Bad request", 400);
 
   try {
     await ctx.runMutation(internal.topics.removeInternal, {
@@ -77,7 +91,7 @@ export const deleteTopic = httpAction(async (ctx, request) => {
       userId: auth.userId,
     });
     return jsonResponse({ success: true });
-  } catch {
-    return errorResponse("Not found", 404);
+  } catch (e) {
+    return notFoundOrRethrow(e);
   }
 });
