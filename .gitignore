@@ -2,3 +2,5 @@
 .env.local
 convex/_generated/
 .superpowers/
+dist/
+node_modules/
