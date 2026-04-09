@@ -1,14 +1,7 @@
 import { ActionCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
-
-async function hashKey(rawKey: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const buf = await crypto.subtle.digest("SHA-256", encoder.encode(rawKey));
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+import { hashKey } from "../lib/crypto";
 
 export async function authenticateRequest(
   ctx: ActionCtx,
