@@ -1,0 +1,3 @@
+{
+  "rewrites": [{ "source": "/((?!llm-api\\.md$).*)", "destination": "/index.html" }]
+}

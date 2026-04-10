@@ -55,6 +55,18 @@ export default function ApiKeys() {
               Give an API key to your LLM so it can add items to your library. Keys are shown
               once on creation — store them safely.
             </p>
+            <p className="mt-2 text-sm text-on-surface-variant leading-relaxed">
+              Point your LLM to the{" "}
+              <a
+                href="/llm-api.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-container underline underline-offset-2 hover:opacity-80"
+              >
+                API documentation
+              </a>
+              {" "}to get started.
+            </p>
           </div>
 
           {/* New key banner */}

@@ -4,8 +4,8 @@ import Login from "./pages/Login";
 import MainLibrary from "./pages/MainLibrary";
 import SearchDiscovery from "./pages/SearchDiscovery";
 import ContentPreview from "./pages/ContentPreview";
-import HistoryArchive from "./pages/HistoryArchive";
 import ApiKeys from "./pages/ApiKeys";
+import Settings from "./pages/Settings";
 import Favorites from "./pages/Favorites";
 import UnreadItems from "./pages/UnreadItems";
 import FilteredItems from "./pages/FilteredItems";
@@ -23,8 +23,8 @@ export default function App() {
                 <Route path="/" element={<MainLibrary />} />
                 <Route path="/explore" element={<SearchDiscovery />} />
                 <Route path="/preview/:id" element={<ContentPreview />} />
-                <Route path="/archive" element={<HistoryArchive />} />
                 <Route path="/settings/api-keys" element={<ApiKeys />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/favorites" element={<Favorites />} />
                 <Route path="/unread" element={<UnreadItems />} />
                 <Route path="/articles" element={

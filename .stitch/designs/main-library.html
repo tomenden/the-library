@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-primary-fixed": "#00201d",
+              "error": "#ba1a1a",
+              "on-tertiary-fixed": "#2e150b",
+              "on-background": "#1a1c1b",
+              "inverse-primary": "#accdc7",
+              "on-surface": "#1a1c1b",
+              "tertiary-fixed": "#ffdbcf",
+              "tertiary-container": "#4b2d22",
+              "surface-tint": "#45645f",
+              "tertiary-fixed-dim": "#ebbcac",
+              "surface-container-low": "#f4f4f2",
+              "primary-fixed": "#c8e9e3",
+              "surface-variant": "#e2e3e1",
+              "background": "#f9f9f7",
+              "secondary-container": "#d8e5e2",
+              "secondary-fixed": "#d8e5e2",
+              "surface-container-highest": "#e2e3e1",
+              "surface-container-high": "#e8e8e6",
+              "on-secondary": "#ffffff",
+              "error-container": "#ffdad6",
+              "on-surface-variant": "#414847",
+              "secondary-fixed-dim": "#bcc9c6",
+              "on-error": "#ffffff",
+              "on-secondary-container": "#5b6764",
+              "surface-bright": "#f9f9f7",
+              "on-secondary-fixed-variant": "#3d4947",
+              "on-tertiary-fixed-variant": "#603f33",
+              "inverse-on-surface": "#f1f1ef",
+              "on-error-container": "#93000a",
+              "on-primary-fixed-variant": "#2e4c48",
+              "primary-container": "#1b3a36",
+              "outline-variant": "#c1c8c6",
+              "primary-fixed-dim": "#accdc7",
+              "secondary": "#55615e",
+              "surface-dim": "#dadad8",
+              "primary": "#032421",
+              "inverse-surface": "#2f3130",
+              "tertiary": "#32180f",
+              "surface-container": "#eeeeec",
+              "on-tertiary": "#ffffff",
+              "on-tertiary-container": "#be9385",
+              "outline": "#717977",
+              "on-secondary-fixed": "#121e1c",
+              "on-primary": "#ffffff",
+              "surface-container-lowest": "#ffffff",
+              "on-primary-container": "#84a49e",
+              "surface": "#f9f9f7"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-shadow {
+            box-shadow: 0 32px 48px -12px rgba(26, 28, 27, 0.04);
+        }
+        .signature-gradient {
+            background: linear-gradient(135deg, #032421 0%, #1b3a36 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body antialiased">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full z-40 backdrop-blur-3xl w-64 bg-[#f4f4f2] dark:bg-stone-900/80 border-r-0">
+<div class="flex flex-col h-full py-8">
+<!-- Brand Identity -->
+<div class="px-8 mb-10">
+<h1 class="text-2xl font-serif text-[#1B3A36] dark:text-emerald-500 italic font-headline">The Gallery</h1>
+<p class="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-secondary-container mt-1 font-label">Premium Curation</p>
+</div>
+<!-- Primary Navigation -->
+<nav class="flex-1 space-y-1">
+<!-- Active Item: All -->
+<a class="flex items-center gap-3 px-8 py-3 text-[#1B3A36] dark:text-emerald-400 bg-[#eeeeec] dark:bg-stone-800 border-l-4 border-[#1B3A36] dark:border-emerald-500 scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span class="text-[0.6875rem] font-bold tracking-[0.05em] uppercase font-label">All</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-stone-500 dark:text-stone-400 hover:text-[#1B3A36] dark:hover:text-emerald-300 hover:bg-[#eeeeec] dark:hover:bg-stone-800 transition-colors duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="mark_as_unread">mark_as_unread</span>
+<span class="text-[0.6875rem] font-bold tracking-[0.05em] uppercase font-label">Unread</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-stone-500 dark:text-stone-400 hover:text-[#1B3A36] dark:hover:text-emerald-300 hover:bg-[#eeeeec] dark:hover:bg-stone-800 transition-colors duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="star">star</span>
+<span class="text-[0.6875rem] font-bold tracking-[0.05em] uppercase font-label">Favorites</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-stone-500 dark:text-stone-400 hover:text-[#1B3A36] dark:hover:text-emerald-300 hover:bg-[#eeeeec] dark:hover:bg-stone-800 transition-colors duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="archive">archive</span>
+<span class="text-[0.6875rem] font-bold tracking-[0.05em] uppercase font-label">Archive</span>
+</a>
+<div class="mt-8 px-8 mb-4">
+<p class="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-surface-variant/50 font-label">Format</p>
+</div>
+<a class="flex items-center gap-3 px-8 py-3 text-stone-500 dark:text-stone-400 hover:text-[#1B3A36] dark:hover:text-emerald-300 hover:bg-[#eeeeec] dark:hover:bg-stone-800 transition-colors duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="description">description</span>
+<span class="text-[0.6875rem] font-bold tracking-[0.05em] uppercase font-label">Articles</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-stone-500 dark:text-stone-400 hover:text-[#1B3A36] dark:hover:text-emerald-300 hover:bg-[#eeeeec] dark:hover:bg-stone-800 transition-colors duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="play_circle">play_circle</span>
+<span class="text-[0.6875rem] font-bold tracking-[0.05em] uppercase font-label">Videos</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-stone-500 dark:text-stone-400 hover:text-[#1B3A36] dark:hover:text-emerald-300 hover:bg-[#eeeeec] dark:hover:bg-stone-800 transition-colors duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="headphones">headphones</span>
+<span class="text-[0.6875rem] font-bold tracking-[0.05em] uppercase font-label">Audio</span>
+</a>
+</nav>
+<!-- Footer Navigation -->
+<div class="mt-auto pt-8 border-t border-stone-200/50">
+<a class="flex items-center gap-3 px-8 py-3 text-stone-500 dark:text-stone-400 hover:text-[#1B3A36] dark:hover:text-emerald-300 hover:bg-[#eeeeec] transition-colors duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+<span class="text-[0.6875rem] font-bold tracking-[0.05em] uppercase font-label">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-stone-500 dark:text-stone-400 hover:text-[#1B3A36] dark:hover:text-emerald-300 hover:bg-[#eeeeec] transition-colors duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+<span class="text-[0.6875rem] font-bold tracking-[0.05em] uppercase font-label">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="ml-64 min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="flex justify-between items-center px-8 w-full sticky top-0 h-16 bg-[#f9f9f7]/80 dark:bg-stone-950/80 backdrop-blur-2xl z-50">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 text-[20px]" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary/20 placeholder:text-on-surface-variant/40 transition-all font-body" placeholder="Search your library..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6 ml-8">
+<button class="signature-gradient text-on-primary px-5 py-2 rounded-lg text-[0.6875rem] font-bold tracking-[0.05em] uppercase font-label shadow-sm hover:opacity-90 transition-opacity">
+                    Add Content
+                </button>
+<div class="flex items-center gap-4 text-stone-500">
+<button class="hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Sophisticated portrait of a creative professional curator in a minimalist studio with soft morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJ2wkS3R_aIA8D2YO1xJ54l42a23D2sHZ4Us_yjG0P_dyci2vmR0cq9Es3IUJiWiYN8Uktj2_ueiJw-DDeQLtwSNWpa2oFbh3VrescjbL1ql7AyI5J2JSR_7JYIL98uPKKzIkZ__JKH6lMM9drlXo7dKrE3kknHZju2CyLw2wRgGXr2k2ghLF6qqx604VYCNWP0VHffdYBDEL20ingyc9WufqBWM0AKm9bDky2wtDRSpTnY_yRSGN2FIp_PocNHsijlYDkPAU3CWk"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<main class="p-8 max-w-[1400px] mx-auto">
+<!-- Page Header -->
+<div class="mb-12 flex justify-between items-end">
+<div>
+<p class="text-[0.6875rem] font-bold tracking-[0.1em] uppercase text-on-surface-variant mb-3 font-label">Personal Collection</p>
+<h2 class="text-5xl font-headline font-light tracking-tight text-on-surface">The Library</h2>
+</div>
+<div class="flex gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined" data-icon="view_list">view_list</span>
+</button>
+</div>
+</div>
+<!-- Bento/Masonry Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+<!-- Card 1: Article -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden editorial-shadow group cursor-pointer flex flex-col">
+<div class="relative h-48 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Overhead shot of an antique open book with fine typography and yellowed pages on a dark wooden surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMFlMwVLnhtm0O6KeI0GNiiPU516u7mGUsPeI8vUoVoNsjZk7wu5HlW5LB0nquNeNK4idcedDkXeTQ2df7leFrPK1FMKwQgeuTrHDDchuBC58OUSTla4GNiXXIws-SpNbHCsJYsokSt0Pu2NPFxvFUYwdtCPfGpBV5aTqWHg4cHqlSt5YY_bxgR12PHMCaUyd3bvdJuohdQ-p3sPYmYqP1VHJK1lqzZ9thM3YLZYCKoJTwtfXrVP-4bBt7lVZ9sVuQVs6askaVess"/>
+<div class="absolute top-4 right-4 bg-secondary-container/90 backdrop-blur text-on-secondary-container px-2 py-1 rounded text-[0.625rem] font-bold tracking-widest font-label uppercase">
+                            12 MIN READ
+                        </div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="flex items-center gap-2 mb-3">
+<span class="text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant/60">Medium</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant/60" data-icon="description">description</span>
+</div>
+<h3 class="text-xl font-headline font-medium text-on-surface leading-snug mb-3 group-hover:text-primary transition-colors">The Architecture of Silence in Modern Living</h3>
+<p class="text-sm text-on-surface-variant/80 line-clamp-3 mb-6 leading-relaxed">Exploring how minimalist spatial design influences cognitive load and emotional well-being in high-density urban environments.</p>
+<div class="mt-auto flex flex-wrap gap-2">
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Design</span>
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Architecture</span>
+</div>
+</div>
+</article>
+<!-- Card 2: Video -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden editorial-shadow group cursor-pointer flex flex-col">
+<div class="relative h-48 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Cinematic wide shot of a lone person walking through a misty pine forest in the early morning with ethereal light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFfePTCsK98vZD027l9LnkRT63VH-ko1xf-M3txS06XIVonL8eKkq3Vx03RhygFcPZBWKzGE0v160Hl58EJDg8Lxq61ivzcpCM8UPgGcn0uKRQ6_trwCCoWtlN_8kEh2gQliIAy5lStJFxG4YBrp3yz-yqRLDbtHmALqaFaXF86G0rKS7JjXQ4YRmwnU_7X0Pd8lPPWPeLLiKSkEnmb6Mz1KL97oalfxPt2AikL-3OiIrZ5Avf_4SRnvb6vtJgCfC9gYi51z64gMM"/>
+<div class="absolute inset-0 bg-primary/20 group-hover:bg-transparent transition-colors flex items-center justify-center">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest/90 backdrop-blur flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-[24px]" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-4 right-4 bg-secondary-container/90 backdrop-blur text-on-secondary-container px-2 py-1 rounded text-[0.625rem] font-bold tracking-widest font-label uppercase">
+                            15:42
+                        </div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="flex items-center gap-2 mb-3">
+<span class="text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant/60">YouTube</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant/60" data-icon="play_circle">play_circle</span>
+</div>
+<h3 class="text-xl font-headline font-medium text-on-surface leading-snug mb-3 group-hover:text-primary transition-colors">A Journey Through the Scandinavian Wilderness</h3>
+<p class="text-sm text-on-surface-variant/80 line-clamp-3 mb-6 leading-relaxed">A visual essay documenting the changing seasons in Northern Norway and the resilience of local flora.</p>
+<div class="mt-auto flex flex-wrap gap-2">
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Nature</span>
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Visual</span>
+</div>
+</div>
+</article>
+<!-- Card 3: Audio/Podcast -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden editorial-shadow group cursor-pointer flex flex-col lg:col-span-1">
+<div class="p-6 flex flex-col flex-1 bg-surface-container-high/40">
+<div class="flex items-center gap-2 mb-6">
+<span class="text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant/60">The New York Times</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant/60" data-icon="headphones">headphones</span>
+</div>
+<div class="flex gap-4 mb-6">
+<div class="w-20 h-20 rounded-lg bg-surface-container overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Macro photo of a vintage microphone in a dark professional recording studio with bokeh lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0ovwfcTJaMsELPaIe2g1j1J1YE-x3fAwsDhjwEkgkhpucSX8b8SW6_GYv9RUbn5AMCzDXKWUlWPt6-TFvGaIwEw3H3afqv9pLiFwd1u-nvvBSWVZvw39zrvVlIyNjRVuP8aDQora64J-rEizk4nUWW1ptRw2tnv6tuHS9nS7WYDDHoYiblylIxfNMuNha81akJUNrq882OqKtgf-NQ6g-iPdAvzQ-eLpe1JxeNLv3OHefts8d1aA153irKQAHfg4jmG6FNPBkMXA"/>
+</div>
+<div>
+<h3 class="text-xl font-headline font-medium text-on-surface leading-snug mb-1 group-hover:text-primary transition-colors">The Daily: Tech’s Big Moment</h3>
+<p class="text-xs text-on-surface-variant font-medium uppercase tracking-tighter">Season 4 • Ep. 112</p>
+</div>
+</div>
+<p class="text-sm text-on-surface-variant/80 line-clamp-3 mb-6 leading-relaxed italic">"Innovation is not just about what is new, but what is lasting. We look at the decade's biggest shifts."</p>
+<div class="mt-auto flex flex-wrap gap-2">
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Technology</span>
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Economics</span>
+</div>
+</div>
+</article>
+<!-- Card 4: Article (WSJ) -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden editorial-shadow group cursor-pointer flex flex-col">
+<div class="relative h-48 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Close-up of a high-end fountain pen resting on a legal document with a pair of reading glasses nearby on a polished desk" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1tqyI8AsdoVKTz91aYEtL4rIa77RmwPAhPkSoqPDmQOSXgyX2eLE9DLRvfzNej_u4eqCXeomHuFxGEO_1HLbVQoP2awVgH2x_hzvqqRU2oToGAAdNLtZdiBWuShPLWsuiF0zsGGjTmZZ4vfZ8yJEO1a0zjX7HYqTMN-fQV7g8SmteC8yRkwiSgn04QCl93HNsPYQ3BWPucw1QuHoF90wc_vL5c70QYY0WAglnv3XVCkIxtXzqDzNgZ1aad2wLw5u-nEYBwIi5h2E"/>
+<div class="absolute top-4 right-4 bg-secondary-container/90 backdrop-blur text-on-secondary-container px-2 py-1 rounded text-[0.625rem] font-bold tracking-widest font-label uppercase">
+                            8 MIN READ
+                        </div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="flex items-center gap-2 mb-3">
+<span class="text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant/60">WSJ</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant/60" data-icon="description">description</span>
+</div>
+<h3 class="text-xl font-headline font-medium text-on-surface leading-snug mb-3 group-hover:text-primary transition-colors">The Resurgence of Long-Form Journalism</h3>
+<p class="text-sm text-on-surface-variant/80 line-clamp-3 mb-6 leading-relaxed">Why readers are turning away from bite-sized content in favor of deep, investigative narratives.</p>
+<div class="mt-auto flex flex-wrap gap-2">
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Media</span>
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Culture</span>
+</div>
+</div>
+</article>
+<!-- Card 5: Twitter/Social -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden editorial-shadow group cursor-pointer flex flex-col border-l-4 border-primary">
+<div class="p-6 flex flex-col flex-1">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-on-surface-variant flex items-center justify-center">
+<span class="text-[10px] text-surface font-bold">𝕏</span>
+</div>
+<span class="text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant/60">Twitter</span>
+</div>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant/60" data-icon="chat">chat</span>
+</div>
+<p class="text-lg font-headline font-light italic text-on-surface mb-6 leading-relaxed">"The best curators don't just find things. They find the connections between things that shouldn't be together, but are."</p>
+<div class="flex items-center gap-3 mb-6">
+<div class="w-8 h-8 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a young man with glasses smiling in a warm sunset lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyem2aiDMBD0CbONdsqnoQtGMKIsVf84OaIncz317ltZuO-mlwr4fEMggFA6DrC2Ocs5fyZPOu-XE4Hy5JfywsXyAQpCQD5iRPld5NfZt_7S-GmsWa3yo96YSmX4EXVI-kcbN5WFoM7eUZ7mUts16FXfk7mqduTrRMbY5dqUwKjj0UMoVdebl3k3vH45-MAkyKiwVcKo6_lWX65PF7pur7i2gmuzSNoYXs-p51dbSTjN0AMHtAcfWVZSyD2O5f7b65bQ5_nterQMo"/>
+</div>
+<div>
+<p class="text-[0.6875rem] font-bold text-on-surface font-label">Naval</p>
+<p class="text-[0.625rem] text-on-surface-variant/60 font-label uppercase">@naval</p>
+</div>
+</div>
+<div class="mt-auto flex flex-wrap gap-2">
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Philosophy</span>
+</div>
+</div>
+</article>
+<!-- Card 6: Article -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden editorial-shadow group cursor-pointer flex flex-col">
+<div class="relative h-48 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Minimalist art gallery interior with a single abstract painting on a white wall and soft natural lighting from above" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBAKu_xGGmcwKQTz932zEPmq4Mhy21QnCjsg50in7DyYG0iG8DQoLEHuNbdlApF4gBXb5xaMq6cd3-OrrKCQXIcenn1-2lvZNxY6P4taR9m13xBE9GvQaps8dUoelLcYx3_HTAzXFi-Yca4O9kTI_hdpjW9KPrihSdVzlND7DWDXjjDKjg793T1-Y-90m2uWWBHW2-iAtHibqzSHC5nG9wo-NLE9F5nmd2-uQwcTkyqmm2tlKxxygNJjKww2OzB2hlEFxnhDHAONg"/>
+<div class="absolute top-4 right-4 bg-secondary-container/90 backdrop-blur text-on-secondary-container px-2 py-1 rounded text-[0.625rem] font-bold tracking-widest font-label uppercase">
+                            20 MIN READ
+                        </div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="flex items-center gap-2 mb-3">
+<span class="text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant/60">The Atlantic</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant/60" data-icon="description">description</span>
+</div>
+<h3 class="text-xl font-headline font-medium text-on-surface leading-snug mb-3 group-hover:text-primary transition-colors">The Future of AI in Creative Industries</h3>
+<p class="text-sm text-on-surface-variant/80 line-clamp-3 mb-6 leading-relaxed">A deep dive into how generative models are reshaping the way we think about authorship and originality.</p>
+<div class="mt-auto flex flex-wrap gap-2">
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">AI</span>
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Creativity</span>
+</div>
+</div>
+</article>
+<!-- Card 7: Video -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden editorial-shadow group cursor-pointer flex flex-col">
+<div class="relative h-48 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Close-up of colorful vibrant abstract smoke and light in motion with deep contrasting shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCn8glJu29SWSUGCeH8D7qH69YgobScJyykoqZvN7QIh_5OfTTdeF0nrpHJkHnwGXaZWGU6lOGwMFoJZnt4IY9rmD7ssMm2mJqB1ep3G2tB9c7KY37W8d4M6kOXkiSlggeSIhB6fZkBwHJsrmDykEbNqfp7O8IBYYQKqV9LFGRySkE9LtDQVaATw0m23RLYC82PNpfN_8cdTo5vP9OQlvJXKwiA26C5_HVFrMWR4qJv0YnMBNtoJwuR73BMrqpMuB_VgcVMsRRAxKE"/>
+<div class="absolute inset-0 bg-primary/20 group-hover:bg-transparent transition-colors flex items-center justify-center">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest/90 backdrop-blur flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-[24px]" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-4 right-4 bg-secondary-container/90 backdrop-blur text-on-secondary-container px-2 py-1 rounded text-[0.625rem] font-bold tracking-widest font-label uppercase">
+                            45:00
+                        </div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="flex items-center gap-2 mb-3">
+<span class="text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant/60">Vimeo</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant/60" data-icon="play_circle">play_circle</span>
+</div>
+<h3 class="text-xl font-headline font-medium text-on-surface leading-snug mb-3 group-hover:text-primary transition-colors">Abstract: The Art of Lighting</h3>
+<p class="text-sm text-on-surface-variant/80 line-clamp-3 mb-6 leading-relaxed">Documentary episode focusing on light designers and their impact on cinematic storytelling.</p>
+<div class="mt-auto flex flex-wrap gap-2">
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Cinema</span>
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Art</span>
+</div>
+</div>
+</article>
+<!-- Card 8: Podcast -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden editorial-shadow group cursor-pointer flex flex-col">
+<div class="p-6 flex flex-col flex-1 border-t-8 border-tertiary-container">
+<div class="flex items-center gap-2 mb-4">
+<span class="text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant/60">Spotify</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant/60" data-icon="headphones">headphones</span>
+</div>
+<h3 class="text-xl font-headline font-medium text-on-surface leading-snug mb-3 group-hover:text-primary transition-colors">HBR: Managing Your Creative Energy</h3>
+<p class="text-sm text-on-surface-variant/80 line-clamp-3 mb-6 leading-relaxed">Expert advice on avoiding burnout and structuring your day for maximum creative output.</p>
+<div class="flex items-center justify-between mt-auto">
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 rounded-full bg-surface-container-high text-[0.625rem] font-bold tracking-widest font-label uppercase text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors">Business</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant/40 tracking-widest font-label">34 MIN</span>
+</div>
+</div>
+</article>
+</div>
+<!-- Load More Interaction -->
+<div class="mt-20 flex justify-center">
+<button class="flex items-center gap-3 px-8 py-4 border border-outline-variant/30 rounded-full text-[0.6875rem] font-bold tracking-[0.15em] uppercase text-on-surface hover:bg-surface-container transition-all font-label">
+<span>Archive Discovery</span>
+<span class="material-symbols-outlined text-[16px]" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</button>
+</div>
+</main>
+</div>
+</body></html>

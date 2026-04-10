@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -10,18 +10,31 @@ export default function ContentPreview() {
   const { id } = useParams<{ id: string }>();
   const item = useQuery(api.items.get, id ? { id: id as Id<"items"> } : "skip");
   const allTopics = useQuery(api.topics.list, {});
-  const [notes, setNotes] = useState(item?.notes ?? "");
+
+  const [newNote, setNewNote] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showTagPicker, setShowTagPicker] = useState(false);
+  const [newTagInput, setNewTagInput] = useState("");
+  const tagPickerRef = useRef<HTMLDivElement>(null);
 
   const updateStatus = useMutation(api.items.update);
   const toggleFavorite = useMutation(api.items.toggleFavorite);
-  const saveNotes = useMutation(api.items.saveNotes);
+  const addNote = useMutation(api.items.addNote);
+  const deleteNote = useMutation(api.items.deleteNote);
   const removeItem = useMutation(api.items.remove);
+  const updateItem = useMutation(api.items.update);
+  const createTopic = useMutation(api.topics.create);
 
-  // Sync notes state when item loads from DB
+  // Close tag picker on outside click
   useEffect(() => {
-    setNotes(item?.notes ?? "");
-  }, [item?.notes]);
+    function handleClick(e: MouseEvent) {
+      if (tagPickerRef.current && !tagPickerRef.current.contains(e.target as Node)) {
+        setShowTagPicker(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   async function handleMarkDone() {
     if (!item || !id) return;
@@ -46,15 +59,43 @@ export default function ContentPreview() {
     }
   }
 
-  async function handleSaveNotes() {
+  async function handleAddNote(e: React.FormEvent) {
+    e.preventDefault();
+    const text = newNote.trim();
+    if (!text || !id) return;
+    await addNote({ id: id as Id<"items">, text });
+    setNewNote("");
+  }
+
+  async function handleDeleteNote(index: number) {
     if (!id) return;
-    await saveNotes({ id: id as Id<"items">, notes });
+    await deleteNote({ id: id as Id<"items">, index });
+  }
+
+  async function handleToggleTag(topicId: Id<"topics">) {
+    if (!item || !id) return;
+    const current = item.topicIds;
+    const next = current.includes(topicId)
+      ? current.filter((t) => t !== topicId)
+      : [...current, topicId];
+    await updateItem({ id: id as Id<"items">, topicIds: next });
+  }
+
+  async function handleCreateTag(e: React.FormEvent) {
+    e.preventDefault();
+    const name = newTagInput.trim();
+    if (!name || !item || !id) return;
+    const topicId = await createTopic({ name });
+    await updateItem({ id: id as Id<"items">, topicIds: [...item.topicIds, topicId] });
+    setNewTagInput("");
   }
 
   const itemTopics =
     item && allTopics
       ? allTopics.filter((t) => item.topicIds.includes(t._id))
       : [];
+
+  const notesList = item?.notesList ?? (item?.notes ? [item.notes] : []);
 
   if (!item) {
     return (
@@ -75,26 +116,24 @@ export default function ContentPreview() {
         ? "Mark as Listened"
         : "Mark as Read";
 
+  const consumedPastLabel =
+    item.contentType === "video" ? "Watched" : item.contentType === "podcast" ? "Listened" : "Read";
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Bar */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-8 h-14 bg-background/80 backdrop-blur-2xl border-b border-outline-variant/20">
         <button
           className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors text-[0.6875rem] font-bold tracking-widest uppercase"
-          onClick={() => navigate("/")}
+          onClick={() => navigate(-1)}
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-          Back to Gallery
+          Back
         </button>
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant">
-            <span className="material-symbols-outlined text-[16px]">save</span>
-            {savedDaysAgo}
-          </span>
-          <button className="text-on-surface-variant hover:text-on-surface transition-colors">
-            <span className="material-symbols-outlined">more_vert</span>
-          </button>
-        </div>
+        <span className="flex items-center gap-1.5 text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant">
+          <span className="material-symbols-outlined text-[16px]">save</span>
+          {savedDaysAgo}
+        </span>
       </header>
 
       <div className="max-w-5xl mx-auto px-8 py-12 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-16">
@@ -109,13 +148,15 @@ export default function ContentPreview() {
 
           {/* Metadata */}
           <div className="flex flex-wrap gap-8 mb-10">
-            <div>
-              <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-1">Publication</p>
-              <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[14px] text-on-surface-variant">language</span>
-                <span className="text-sm font-medium text-on-surface uppercase tracking-wider">{item.sourceName ?? ""}</span>
+            {item.sourceName && (
+              <div>
+                <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-1">Publication</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[14px] text-on-surface-variant">language</span>
+                  <span className="text-sm font-medium text-on-surface uppercase tracking-wider">{item.sourceName}</span>
+                </div>
               </div>
-            </div>
+            )}
             <div>
               <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant/60 mb-1">Saved</p>
               <span className="text-sm font-medium text-on-surface">{new Date(item._creationTime).toLocaleDateString()}</span>
@@ -138,11 +179,6 @@ export default function ContentPreview() {
             </blockquote>
           )}
 
-          {/* Body */}
-          <div className="prose max-w-none">
-            <p className="text-base text-on-surface leading-relaxed">{item.summary ?? ""}</p>
-          </div>
-
           {/* Continue Reading */}
           <a
             href={item.url}
@@ -150,7 +186,7 @@ export default function ContentPreview() {
             rel="noopener noreferrer"
             className="mt-12 flex items-center gap-2 text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface hover:text-primary-container transition-colors border-b border-on-surface/30 pb-0.5 w-fit"
           >
-            Continue Reading Original Source
+            Open Original Source
             <span className="material-symbols-outlined text-[16px]">open_in_new</span>
           </a>
         </article>
@@ -165,45 +201,115 @@ export default function ContentPreview() {
             className="flex items-center justify-between p-4 signature-gradient text-on-primary rounded-xl group hover:opacity-90 transition-opacity"
           >
             <div>
-              <p className="text-[0.6875rem] font-bold tracking-widest uppercase opacity-70 mb-1">External Link</p>
+              <p className="text-[0.6875rem] font-bold tracking-widest uppercase opacity-70 mb-1">Source</p>
               <p className="font-medium truncate max-w-[200px]">{item.url}</p>
             </div>
             <span className="material-symbols-outlined">open_in_new</span>
           </a>
 
           {/* Tags */}
-          <div className="bg-surface-container-lowest rounded-xl p-5 editorial-shadow">
+          <div className="bg-surface-container-lowest rounded-xl p-5 editorial-shadow" ref={tagPickerRef}>
             <div className="flex items-center justify-between mb-4">
               <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant">Tags</p>
-              <button className="text-[0.6875rem] font-bold tracking-widest uppercase text-primary-container hover:underline">
-                Add New
+              <button
+                onClick={() => setShowTagPicker((v) => !v)}
+                className="text-[0.6875rem] font-bold tracking-widest uppercase text-primary-container hover:underline"
+              >
+                {showTagPicker ? "Done" : "Add"}
               </button>
             </div>
+
             <div className="flex flex-wrap gap-2">
               {itemTopics.map((t) => <TagChip key={t._id} label={t.name} />)}
-              {itemTopics.length === 0 && (
+              {itemTopics.length === 0 && !showTagPicker && (
                 <p className="text-sm text-on-surface-variant/60">No tags yet.</p>
               )}
             </div>
+
+            {showTagPicker && (
+              <div className="mt-4 space-y-3">
+                {/* Existing topics */}
+                {allTopics && allTopics.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {allTopics.map((t) => {
+                      const active = item.topicIds.includes(t._id);
+                      return (
+                        <button
+                          key={t._id}
+                          onClick={() => handleToggleTag(t._id)}
+                          className={[
+                            "px-3 py-1 rounded-full text-[0.6875rem] font-bold uppercase tracking-wider transition-colors",
+                            active
+                              ? "bg-primary-container text-on-primary-container"
+                              : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high",
+                          ].join(" ")}
+                        >
+                          {active && "✓ "}{t.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* Create new tag */}
+                <form onSubmit={handleCreateTag} className="flex gap-2">
+                  <input
+                    value={newTagInput}
+                    onChange={(e) => setNewTagInput(e.target.value)}
+                    placeholder="New tag name…"
+                    className="flex-1 px-3 py-1.5 text-sm bg-surface-container rounded-lg border border-outline-variant
+                               focus:outline-none focus:border-primary-container text-on-surface placeholder:text-on-surface-variant/40"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newTagInput.trim()}
+                    className="px-3 py-1.5 bg-primary-container text-on-primary-container rounded-lg text-[0.6875rem] font-bold uppercase tracking-wider disabled:opacity-40"
+                  >
+                    Add
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
 
           {/* Private Notes */}
           <div className="bg-surface-container-lowest rounded-xl p-5 editorial-shadow">
-            <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant mb-3">Private Notes</p>
-            <textarea
-              className="w-full text-sm text-on-surface-variant bg-transparent border border-outline-variant/40 rounded-lg p-3 min-h-[96px] resize-none focus:outline-none focus:ring-1 focus:ring-primary/20 placeholder:text-on-surface-variant/40"
-              placeholder="Add your reflections or context here..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-            {notes !== (item.notes ?? "") && id && (
-              <button
-                onClick={handleSaveNotes}
-                className="mt-2 text-[0.6875rem] font-bold uppercase tracking-wider text-primary-container hover:opacity-80"
-              >
-                Save Notes
-              </button>
+            <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant mb-3">Notes</p>
+
+            {/* Existing notes */}
+            {notesList.length > 0 && (
+              <ul className="space-y-2 mb-3">
+                {notesList.map((note, i) => (
+                  <li key={i} className="flex items-start gap-2 group">
+                    <p className="flex-1 text-sm text-on-surface leading-relaxed">{note}</p>
+                    <button
+                      onClick={() => handleDeleteNote(i)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-error mt-0.5"
+                      title="Delete note"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
+
+            {/* Add new note */}
+            <form onSubmit={handleAddNote} className="flex gap-2">
+              <input
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                placeholder="Add a note…"
+                className="flex-1 px-3 py-1.5 text-sm bg-surface-container rounded-lg border border-outline-variant
+                           focus:outline-none focus:border-primary-container text-on-surface placeholder:text-on-surface-variant/40"
+              />
+              <button
+                type="submit"
+                disabled={!newNote.trim()}
+                className="px-3 py-1.5 bg-primary-container text-on-primary-container rounded-lg text-[0.6875rem] font-bold uppercase tracking-wider disabled:opacity-40"
+              >
+                Add
+              </button>
+            </form>
           </div>
 
           {/* Actions */}
@@ -219,13 +325,7 @@ export default function ContentPreview() {
                 check_circle
               </span>
               <span className="text-sm font-medium">
-                {item.status === "done"
-                  ? consumedLabel === "Mark as Read"
-                    ? "Read"
-                    : consumedLabel === "Mark as Watched"
-                      ? "Watched"
-                      : "Listened"
-                  : consumedLabel}
+                {item.status === "done" ? consumedPastLabel : consumedLabel}
               </span>
             </button>
             <button

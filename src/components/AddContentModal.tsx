@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 
 interface Props {
   onClose: () => void;
@@ -17,13 +18,31 @@ const CONTENT_TYPES = [
 
 export default function AddContentModal({ onClose }: Props) {
   const createItem = useMutation(api.items.create);
+  const createTopic = useMutation(api.topics.create);
+  const allTopics = useQuery(api.topics.list, {});
 
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
-  const [notes, setNotes] = useState("");
   const [contentType, setContentType] = useState("");
+  const [selectedTopicIds, setSelectedTopicIds] = useState<Id<"topics">[]>([]);
+  const [newTagInput, setNewTagInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  function toggleTopic(id: Id<"topics">) {
+    setSelectedTopicIds((prev) =>
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+    );
+  }
+
+  async function handleAddTag(e: React.FormEvent) {
+    e.preventDefault();
+    const name = newTagInput.trim();
+    if (!name) return;
+    const topicId = await createTopic({ name });
+    setSelectedTopicIds((prev) => [...prev, topicId]);
+    setNewTagInput("");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,9 +53,8 @@ export default function AddContentModal({ onClose }: Props) {
       await createItem({
         url: url.trim(),
         title: title.trim() || undefined,
-        notes: notes.trim() || undefined,
         contentType: (contentType as "article" | "video" | "podcast" | "newsletter" | "tweet") || undefined,
-        topicIds: [],
+        topicIds: selectedTopicIds,
       });
       onClose();
     } catch (err) {
@@ -108,19 +126,53 @@ export default function AddContentModal({ onClose }: Props) {
             </select>
           </div>
 
+          {/* Tags */}
           <div>
             <label className="block text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant mb-1.5">
-              Notes (optional)
+              Tags (optional)
             </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Why are you saving this?"
-              rows={2}
-              className="w-full px-4 py-2.5 bg-surface-container rounded-xl border border-outline-variant
-                         text-sm text-on-surface placeholder:text-on-surface-variant/50
-                         focus:outline-none focus:border-primary-container resize-none"
-            />
+
+            {allTopics && allTopics.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {allTopics.map((t) => {
+                  const active = selectedTopicIds.includes(t._id);
+                  return (
+                    <button
+                      key={t._id}
+                      type="button"
+                      onClick={() => toggleTopic(t._id)}
+                      className={[
+                        "px-3 py-1 rounded-full text-[0.6875rem] font-bold uppercase tracking-wider transition-colors",
+                        active
+                          ? "bg-primary-container text-on-primary-container"
+                          : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high",
+                      ].join(" ")}
+                    >
+                      {active && "✓ "}{t.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <input
+                value={newTagInput}
+                onChange={(e) => setNewTagInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddTag(e); } }}
+                placeholder="Create new tag…"
+                className="flex-1 px-3 py-1.5 text-sm bg-surface-container rounded-lg border border-outline-variant
+                           focus:outline-none focus:border-primary-container text-on-surface placeholder:text-on-surface-variant/40"
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                disabled={!newTagInput.trim()}
+                className="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-[0.6875rem] font-bold uppercase tracking-wider hover:bg-surface-container-high disabled:opacity-40 transition-colors"
+              >
+                Add
+              </button>
+            </div>
           </div>
 
           {error && <p className="text-sm text-error">{error}</p>}

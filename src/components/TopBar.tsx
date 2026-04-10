@@ -38,21 +38,13 @@ export default function TopBar({
         <div />
       )}
 
-      <div className="flex items-center gap-6 ml-8">
+      <div className="flex items-center gap-4 ml-8">
         <button
           onClick={() => setShowAdd(true)}
           className="signature-gradient text-on-primary px-5 py-2 rounded-lg text-[0.6875rem] font-bold tracking-[0.05em] uppercase shadow-sm hover:opacity-90 transition-opacity"
         >
           Add Content
         </button>
-        <div className="flex items-center gap-4 text-on-surface-variant">
-          <button className="hover:text-primary transition-colors">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <button className="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden">
-            <span className="material-symbols-outlined text-[32px] leading-none">account_circle</span>
-          </button>
-        </div>
       </div>
     </header>
       {showAdd && <AddContentModal onClose={() => setShowAdd(false)} />}

@@ -13,7 +13,7 @@ export default function SearchDiscovery() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar showAddButton />
+      <Sidebar />
       <div className="ml-64 flex-1 flex flex-col">
         <TopBar showSearch={false} showBrandName />
 

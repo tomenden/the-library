@@ -11,7 +11,6 @@ const primaryNav: NavItem[] = [
   { icon: 'search', label: 'Explore', to: '/explore' },
   { icon: 'mark_as_unread', label: 'Unread', to: '/unread' },
   { icon: 'star', label: 'Favorites', to: '/favorites' },
-  { icon: 'archive', label: 'Archive', to: '/archive' },
 ];
 
 const formatNav: NavItem[] = [
@@ -20,11 +19,7 @@ const formatNav: NavItem[] = [
   { icon: 'headphones', label: 'Audio', to: '/audio' },
 ];
 
-export interface SidebarProps {
-  readonly showAddButton?: boolean;
-}
-
-export default function Sidebar({ showAddButton = false }: SidebarProps) {
+export default function Sidebar() {
   const location = useLocation();
 
   const navLinkClass = (to: string) => {
@@ -42,9 +37,9 @@ export default function Sidebar({ showAddButton = false }: SidebarProps) {
   return (
     <aside className="fixed left-0 top-0 h-full z-40 w-64 bg-surface-container-low border-r-0 flex flex-col">
       <div className="px-8 py-8 mb-2">
-        <h1 className="text-2xl font-headline italic text-primary-container">The Gallery</h1>
+        <h1 className="text-2xl font-headline italic text-primary-container">The Library</h1>
         <p className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-secondary-container mt-1">
-          Premium Curation
+          Your Reading List
         </p>
       </div>
 
@@ -68,30 +63,15 @@ export default function Sidebar({ showAddButton = false }: SidebarProps) {
         ))}
       </nav>
 
-      {showAddButton && (
-        <div className="px-8 pb-4">
-          <button className="w-full py-3 px-4 signature-gradient text-on-primary rounded-xl text-[0.6875rem] font-bold uppercase tracking-[0.05em]">
-            + Add New Content
-          </button>
-        </div>
-      )}
-
       <div className="mt-auto pt-6 border-t border-outline-variant/30">
-        <NavLink
-          to="/settings/api-keys"
-          className={navLinkClass("/settings/api-keys")}
-        >
+        <NavLink to="/settings/api-keys" className={navLinkClass("/settings/api-keys")}>
           <span className="material-symbols-outlined text-[20px]">key</span>
           <span className={labelClass}>API Keys</span>
         </NavLink>
-        <a href="#" className="flex items-center gap-3 px-8 py-3 text-on-surface-variant hover:text-primary-container hover:bg-surface-container transition-colors">
+        <NavLink to="/settings" className={navLinkClass("/settings")}>
           <span className="material-symbols-outlined text-[20px]">settings</span>
           <span className={labelClass}>Settings</span>
-        </a>
-        <a href="#" className="flex items-center gap-3 px-8 py-3 text-on-surface-variant hover:text-primary-container hover:bg-surface-container transition-colors">
-          <span className="material-symbols-outlined text-[20px]">help</span>
-          <span className={labelClass}>Support</span>
-        </a>
+        </NavLink>
       </div>
     </aside>
   );
