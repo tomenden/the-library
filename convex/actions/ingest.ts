@@ -47,6 +47,7 @@ async function enrichUrl(url: string, apiKey: string): Promise<EnrichmentData> {
       "User-Agent":
         "Mozilla/5.0 (compatible; TheLibrary/1.0; +https://the-library-sigma.vercel.app)",
     },
+    signal: AbortSignal.timeout(15000),
   });
   if (!pageRes.ok) {
     throw new Error(`Failed to fetch URL (${pageRes.status}): ${url}`);
@@ -90,6 +91,11 @@ async function ingestUrlHandler(
   ctx: ActionCtx,
   { userId, url, notes }: { userId: Id<"users">; url: string; notes?: string }
 ): Promise<Id<"items">> {
+  const parsed = new URL(url);
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error("Only http and https URLs are supported");
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   let enrichment: EnrichmentData = { topicNames: [] };
 
