@@ -18,21 +18,28 @@ Built for people who collect a lot of things to read/watch and want to actually 
 
 ## LLM Integration
 
-The app exposes a REST API so your AI assistant can add items directly to your library.
+The app exposes a REST API at `https://the-library-sigma.vercel.app/api/`.
+Generate an API key at **Settings → API Keys** in the app.
 
-1. Go to **API Keys** in the app and generate a key
-2. Point your LLM to the [API documentation](https://the-library-sigma.vercel.app/llm-api.md)
+Full docs: [llm-api.md](https://the-library-sigma.vercel.app/llm-api.md)
 
-### Example Claude skill prompt
+### Claude skill (recommended)
 
+This repo ships a [SKILL.md](./SKILL.md) at the root, making it installable via the `agent-skills-cli`:
+
+```bash
+npx agent-skills-cli install tomenden/the-library
 ```
-You have access to my personal library at https://the-library-sigma.vercel.app.
-My API key is: lib_<your-key>
 
-When I share something interesting with you, or when you think I'd want to save something
-we've discussed, add it to my library using POST /api/items with the URL, a short title,
-a one-sentence summary, the content type, and relevant topic tags.
+Or install manually for Claude Code:
+
+```bash
+mkdir -p ~/.claude/skills/the-library
+curl -fsSL https://the-library-sigma.vercel.app/the-library/SKILL.md \
+  -o ~/.claude/skills/the-library/SKILL.md
 ```
+
+For claude.ai: download [SKILL.md](./SKILL.md), put it in a folder named `the-library`, zip it, and upload at **claude.ai → Settings → Features → Agent Skills**.
 
 ## Stack
 
