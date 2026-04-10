@@ -1,11 +1,4 @@
-const VALID_CONTENT_TYPES = [
-  "article",
-  "video",
-  "podcast",
-  "tweet",
-  "newsletter",
-] as const;
-type ContentType = (typeof VALID_CONTENT_TYPES)[number];
+import { VALID_CONTENT_TYPES, ContentType } from "../schema";
 
 export interface EnrichmentData {
   title?: string;
