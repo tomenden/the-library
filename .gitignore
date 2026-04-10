@@ -43,3 +43,6 @@ skills/
 
 # Internal implementation planning
 docs/superpowers/
+
+# Other agent instruction files (keep only CLAUDE.md)
+AGENTS.md
