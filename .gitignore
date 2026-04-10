@@ -5,3 +5,41 @@ convex/_generated/
 dist/
 node_modules/
 .vercel
+
+# Agent skill directories (installed on demand like node_modules)
+skills/
+.claude/
+.agents/
+.adal/
+.augment/
+.codebuddy/
+.commandcode/
+.continue/
+.cortex/
+.crush/
+.factory/
+.goose/
+.iflow/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.trae/
+.vibe/
+.windsurf/
+.zencoder/
+
+# Design tool artifacts
+.stitch/
+
+# Internal implementation planning
+docs/superpowers/
