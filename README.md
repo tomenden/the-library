@@ -26,7 +26,7 @@ The app exposes a REST API so your AI assistant can add items directly to your l
 ### Example Claude skill prompt
 
 ```
-You have access to my personal library at https://colorful-beagle-698.convex.site.
+You have access to my personal library at https://the-library-sigma.vercel.app.
 My API key is: lib_<your-key>
 
 When I share something interesting with you, or when you think I'd want to save something

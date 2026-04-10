@@ -1,3 +1,12 @@
 {
-  "rewrites": [{ "source": "/((?!llm-api\\.md$).*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://colorful-beagle-698.convex.site/api/:path*"
+    },
+    {
+      "source": "/((?!llm-api\\.md$|the-library/).*)",
+      "destination": "/index.html"
+    }
+  ]
 }
