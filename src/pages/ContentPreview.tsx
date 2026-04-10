@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import TagChip from "../components/TagChip";
@@ -90,10 +90,14 @@ export default function ContentPreview() {
     setNewTagInput("");
   }
 
-  const relatedItems = useQuery(
-    api.search.moreLikeThis,
-    id ? { id: id as Id<"items"> } : "skip"
-  );
+  const [relatedItems, setRelatedItems] = useState<any[] | null>(null);
+  const runMoreLikeThis = useAction(api.search.moreLikeThis);
+  useEffect(() => {
+    if (!id) return;
+    runMoreLikeThis({ id: id as Id<"items"> })
+      .then(setRelatedItems)
+      .catch(() => setRelatedItems([]));
+  }, [id]);
 
   const itemTopics =
     item && allTopics

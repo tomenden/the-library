@@ -40,7 +40,7 @@ function itemToText(item: {
 
 export const generateEmbedding = internalAction({
   args: { itemId: v.id("items") },
-  handler: async (ctx, { itemId }) => {
+  handler: async (ctx, { itemId }): Promise<void> => {
     const item = await ctx.runQuery(internal.items.getForEmbedding, { itemId });
     if (!item) return;
 
@@ -54,7 +54,7 @@ export const generateEmbedding = internalAction({
 
 export const backfillEmbeddings = internalAction({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<{ queued: number }> => {
     const items = await ctx.runQuery(internal.items.listWithoutEmbedding, {});
     for (const item of items) {
       await ctx.scheduler.runAfter(0, internal.actions.embeddings.generateEmbedding, {
