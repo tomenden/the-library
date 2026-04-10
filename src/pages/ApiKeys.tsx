@@ -65,7 +65,16 @@ export default function ApiKeys() {
               >
                 API documentation
               </a>
-              {" "}to get started.
+              {" "}to get started. Or install the{" "}
+              <a
+                href="/skill/SKILL.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-container underline underline-offset-2 hover:opacity-80"
+              >
+                Claude skill
+              </a>
+              {" "}so Claude can save things for you automatically.
             </p>
           </div>
 

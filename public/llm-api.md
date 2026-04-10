@@ -2,6 +2,12 @@
 
 This API lets you add and manage items in a user's personal content library.
 
+## Claude Skill
+
+Install the [Claude skill](https://the-library-sigma.vercel.app/skill/SKILL.md) to let Claude
+save things to your library automatically. Download the file, zip the `skill/` folder, and
+upload it at claude.ai → Settings → Features → Agent Skills.
+
 ## Authentication
 
 All requests must include an API key in the `Authorization` header:
