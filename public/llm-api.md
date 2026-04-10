@@ -76,6 +76,22 @@ Use `topicNames` (strings) instead of `topicIds` — the API resolves or creates
 }
 ```
 
+### POST /api/ingest — Save a URL with AI enrichment
+
+Fetches the page at the given URL, uses AI to extract a title, summary, content type, source name, and suggested topics, then saves the item automatically. No metadata required from the caller.
+
+**Request:**
+```json
+{
+  "url": "https://www.example.com/article",
+  "notes": "Optional personal note appended to the item"
+}
+```
+
+**Response:** `201 Created` — enriched item object (same shape as `POST /api/items` response).
+
+Falls back to saving with just the URL if the page cannot be fetched or enrichment fails.
+
 ### GET /api/items — List items
 
 Query params (all optional):
