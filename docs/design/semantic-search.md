@@ -16,106 +16,137 @@ This misses:
 ## What semantic search would add
 
 - Search "what should I read about focus?" → surfaces items about deep work, flow states, productivity
-- Surface items related to your current reading (e.g. "more like this")
+- Surface items related to your current reading ("more like this")
 - Cross-topic discovery: "LLM memory" might surface both AI papers and Zettelkasten notes
 
-## Technical approach
+## Approach: Convex native vector search
 
-### Embeddings
+Convex has production-ready vector search built in. No external vector database needed.
 
-Each item gets a vector embedding generated from its `title + summary + notes + topics`.
-When a user searches, the query is embedded and nearest-neighbour retrieved.
+**How it works:**
+- Define a `vectorIndex` on the table with a `vectorField` and fixed `dimensions`
+- `ctx.vectorSearch(table, index, { vector, limit, filter })` returns `{ _id, _score }[]` sorted by cosine similarity
+- Results can be filtered on up to 16 additional fields pre-indexed alongside the vector
+- Supports 2–4096 dimensions, up to 256 results per search
+- `_score` is in the range −1 to 1 (higher = more similar)
 
-**Model options:**
-- `text-embedding-3-small` (OpenAI, cheap, 1536d)
-- Convex has no native vector index yet → need external store or use Convex's upcoming vector support
-- Alternative: use Convex's `vectorSearch` when available in preview
+### Schema change
 
-### Architecture options
+```ts
+// convex/schema.ts
+items: defineTable({
+  // ... existing fields ...
+  embedding: v.optional(v.array(v.float64())),
+})
+  .index("by_user", ["userId"])
+  .index("by_user_status", ["userId", "status"])
+  .vectorIndex("by_embedding", {
+    vectorField: "embedding",
+    dimensions: 1536,           // matches text-embedding-3-small
+    filterFields: ["userId"],   // so search is scoped per user
+  })
+```
 
-**Option A: External vector store (Pinecone / Qdrant)**
-- Store item ID + vector in external DB
-- On item create/update, call embedding API + upsert vector
-- On search, embed query → query vector store → fetch full items from Convex by ID
-- Pro: battle-tested, fast
-- Con: another service to manage, cost
-
-**Option B: Convex native vector search (in preview)**
-- Convex supports vector fields and HNSW index as of late 2024
-- `defineTable({ embedding: v.optional(v.array(v.float64())) })`
-- `.vectorSearch("embedding", queryEmbedding, { limit: 10 })`
-- Pro: no extra service, consistent auth model
-- Con: still in preview, embedding generation needs to be triggered externally
-
-**Option C: Store embeddings in Convex, use cosine similarity in query**
-- Convex JS queries can compute dot products
-- Works for small libraries (< 10k items), too slow at scale
-- Not recommended
-
-**Recommendation:** Start with Option B (Convex native vector search).
-If it's too limited or slow, migrate to Pinecone.
+The `embedding` field is optional — items without one are simply absent from vector search results and fall back to keyword search.
 
 ### Embedding generation
 
-Two triggers:
-1. Item created → schedule background action to generate embedding
-2. Item updated (title/summary/notes changed) → regenerate embedding
-
-Use Convex Actions (can call external APIs) scheduled via `ctx.scheduler.runAfter`.
+Embeddings are generated in Convex Actions (which can call external APIs), triggered on item create/update:
 
 ```ts
 // convex/actions/embeddings.ts
 export const generateEmbedding = internalAction({
   args: { itemId: v.id("items") },
   handler: async (ctx, { itemId }) => {
-    const item = await ctx.runQuery(internal.items.getInternal, { itemId });
-    const text = [item.title, item.summary, item.notes, ...item.topics].join(" ");
-    const embedding = await callOpenAI(text); // float64[]
+    const item = await ctx.runQuery(internal.items.getById, { itemId });
+    if (!item) return;
+
+    // Concatenate all meaningful text fields
+    const text = [item.title, item.summary, ...(item.notesList ?? []), item.sourceName]
+      .filter(Boolean)
+      .join(" ");
+
+    const res = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ model: "text-embedding-3-small", input: text }),
+    });
+    const { data } = await res.json();
+    const embedding: number[] = data[0].embedding;
+
     await ctx.runMutation(internal.items.setEmbedding, { itemId, embedding });
   },
 });
 ```
 
-### Schema change needed
-
-```ts
-items: defineTable({
-  // existing fields...
-  embedding: v.optional(v.array(v.float64())),
-}).vectorIndex("by_embedding", { vectorField: "embedding", dimensions: 1536 })
-```
+Triggered from mutations via `ctx.scheduler.runAfter(0, internal.actions.embeddings.generateEmbedding, { itemId })`.
 
 ### Search flow
 
+```ts
+// convex/items.ts — vectorSearch public query
+export const vectorSearch = action({
+  args: { q: v.string() },
+  handler: async (ctx, { q }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    // 1. Embed the query
+    const embedding = await embedText(q); // same OpenAI call
+
+    // 2. Vector search, filtered to this user
+    const results = await ctx.vectorSearch("items", "by_embedding", {
+      vector: embedding,
+      limit: 20,
+      filter: (f) => f.eq("userId", userId),
+    });
+
+    // 3. Fetch full item documents
+    const items = await ctx.runQuery(internal.items.getManyByIds, {
+      ids: results.map((r) => r._id),
+      userId,
+    });
+
+    // Return with scores attached
+    return items.map((item, i) => ({ ...item, _score: results[i]._score }));
+  },
+});
 ```
-User types query
-  → embed query (OpenAI API call from Convex Action)
-  → vectorSearch("by_embedding", queryEmbedding, { limit: 20 })
-  → filter by userId
-  → return items sorted by relevance score
-```
+
+### Hybrid fallback
+
+Items without embeddings (just saved, or backfill not yet run) return no vector score.
+The UI can show keyword results alongside vector results, or fall back gracefully.
+
+A "hybrid" approach is possible: run both queries and merge by score, but this is an optimisation for later.
 
 ### UI integration
 
-- Replace (or augment) the keyword search input in the Explore page
-- Show relevance score subtly (dot opacity / match label)
-- Allow hybrid: vector search + keyword rerank
-- "More like this" button on ContentPreview → search by item's embedding
+- Explore page: detect if the query is a natural language question vs. a keyword and route accordingly — or just always run both and merge
+- Show a subtle relevance indicator on cards (filled dot = strong match)
+- "More like this" button on ContentPreview: call vector search with the item's own embedding as the query vector (skip the embed step)
+- Results that lack an embedding show at the bottom or are hidden from semantic results
 
 ## Cost estimate
 
-- text-embedding-3-small: $0.02 / 1M tokens
+- `text-embedding-3-small`: $0.02 / 1M tokens
 - Average item text: ~200 tokens
-- 1000 items: ~200K tokens → ~$0.004 total to embed library
-- Per search query: 1 embedding call, negligible
+- 1,000 items: ~$0.004 total to embed the whole library
+- Per search query: one embedding call, ~$0.000004 — essentially free
 
-## What to build first
+## What to build
 
-1. Schema + vector index migration (non-breaking, embedding is optional)
-2. Background action to embed items on create/update
-3. Backfill action for existing items
-4. Search endpoint in HTTP API (`GET /api/items/search?q=...`)
-5. UI: update Explore page to use semantic search
-6. "More like this" on ContentPreview
+1. Add `OPENAI_API_KEY` to Convex env (prod + dev)
+2. Schema: add `embedding` field + `vectorIndex` (non-breaking, field is optional)
+3. `convex/actions/embeddings.ts`: `generateEmbedding` internal action
+4. Wire `generateEmbedding` into `createHandler` and `updateHandler` via scheduler
+5. Backfill action for existing items (one-shot mutation to queue all)
+6. `vectorSearch` public action on items
+7. HTTP API: `GET /api/items/search?q=...` (semantic) alongside existing `GET /api/items?q=...` (keyword)
+8. UI: Explore page uses semantic search when input reads like a query; keyword otherwise
+9. "More like this" on ContentPreview
 
-The feature can ship incrementally — items without embeddings fall back to keyword search.
+Steps 1–6 are purely backend and can ship without touching the UI. Steps 7–9 are the user-visible layer.
