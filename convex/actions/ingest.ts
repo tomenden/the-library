@@ -1,5 +1,5 @@
-import { action, internalAction } from "../_generated/server";
-import { ActionCtx } from "../_generated/server";
+"use node";
+import { action, internalAction, ActionCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "../_generated/api";
@@ -48,6 +48,9 @@ async function enrichUrl(url: string, apiKey: string): Promise<EnrichmentData> {
         "Mozilla/5.0 (compatible; TheLibrary/1.0; +https://the-library-sigma.vercel.app)",
     },
   });
+  if (!pageRes.ok) {
+    throw new Error(`Failed to fetch URL (${pageRes.status}): ${url}`);
+  }
   const html = await pageRes.text();
   const truncated = truncateHtml(html);
 
