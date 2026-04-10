@@ -14,6 +14,7 @@ import {
   updateTopic,
   deleteTopic,
 } from "./httpActions/topics";
+import { ingestItem } from "./httpActions/ingest";
 
 const http = httpRouter();
 
@@ -27,6 +28,9 @@ http.route({ path: "/api/items/search", method: "GET", handler: semanticSearchIt
 http.route({ pathPrefix: "/api/items/", method: "GET", handler: getItem });
 http.route({ pathPrefix: "/api/items/", method: "PATCH", handler: updateItem });
 http.route({ pathPrefix: "/api/items/", method: "DELETE", handler: deleteItem });
+
+// Ingest (AI-powered)
+http.route({ path: "/api/ingest", method: "POST", handler: ingestItem });
 
 // Topics
 http.route({ path: "/api/topics", method: "GET", handler: listTopics });
