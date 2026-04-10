@@ -6,10 +6,15 @@ export const ingestItem = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);
 
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return errorResponse("Invalid JSON body", 400);
+  }
   const { url, notes } = body;
 
-  if (!url || typeof url !== "string") {
+  if (typeof url !== "string" || url.trim() === "") {
     return errorResponse("url is required", 400);
   }
 
@@ -24,5 +29,6 @@ export const ingestItem = httpAction(async (ctx, request) => {
     userId: auth.userId,
   });
 
+  if (!item) return errorResponse("Item not found after ingest", 500);
   return jsonResponse(item, 201);
 });
