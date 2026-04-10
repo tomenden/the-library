@@ -89,14 +89,28 @@ export const toggleFavorite = mutation({
   },
 });
 
-export const saveNotes = mutation({
-  args: { id: v.id("items"), notes: v.string() },
-  handler: async (ctx, { id, notes }) => {
+export const addNote = mutation({
+  args: { id: v.id("items"), text: v.string() },
+  handler: async (ctx, { id, text }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Unauthorized");
     const item = await ctx.db.get(id);
     if (!item || item.userId !== userId) throw new Error("Not found");
-    await ctx.db.patch(id, { notes });
+    const current = item.notesList ?? (item.notes ? [item.notes] : []);
+    await ctx.db.patch(id, { notesList: [...current, text] });
+  },
+});
+
+export const deleteNote = mutation({
+  args: { id: v.id("items"), index: v.number() },
+  handler: async (ctx, { id, index }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
+    const item = await ctx.db.get(id);
+    if (!item || item.userId !== userId) throw new Error("Not found");
+    const current = item.notesList ?? (item.notes ? [item.notes] : []);
+    const next = current.filter((_, i) => i !== index);
+    await ctx.db.patch(id, { notesList: next });
   },
 });
 
@@ -111,7 +125,7 @@ export const createInternal = internalMutation({
     contentType: v.optional(contentTypeValidator),
     sourceName: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
-    notes: v.optional(v.string()),
+    notesList: v.optional(v.array(v.string())),
     topicIds: v.array(v.id("topics")),
   },
   handler: async (ctx, args) => createHandler(ctx, args),
@@ -148,7 +162,7 @@ export const updateInternal = internalMutation({
     title: v.optional(v.string()),
     summary: v.optional(v.string()),
     status: v.optional(statusValidator),
-    notes: v.optional(v.string()),
+    notesList: v.optional(v.array(v.string())),
     topicIds: v.optional(v.array(v.id("topics"))),
   },
   handler: async (ctx, { id, userId, ...fields }) =>
@@ -172,7 +186,7 @@ export const toggleFavoriteInternal = internalMutation({
 // ── Shared logic ───────────────────────────────────────────────────────────
 
 async function createHandler(ctx: any, args: any): Promise<Id<"items">> {
-  const { userId, topicIds = [], ...rest } = args;
+  const { userId, topicIds = [], notes: _notes, ...rest } = args;
   return ctx.db.insert("items", { ...rest, userId, status: "saved", topicIds });
 }
 

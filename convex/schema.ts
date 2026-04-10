@@ -29,6 +29,7 @@ export default defineSchema({
     imageUrl: v.optional(v.string()),
     status: statusValidator,
     notes: v.optional(v.string()),
+    notesList: v.optional(v.array(v.string())),
     topicIds: v.array(v.id("topics")),
     isFavorite: v.optional(v.boolean()),
   })

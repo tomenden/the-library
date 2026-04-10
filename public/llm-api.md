@@ -37,7 +37,7 @@ An **item** represents one saved link.
 | `imageUrl` | string? | Thumbnail URL |
 | `status` | enum | `saved` / `in_progress` / `done` — defaults to `saved` |
 | `isFavorite` | boolean? | Whether the item is starred as a favorite |
-| `notes` | string? | User-written context, e.g. `"suggested by Naval"` |
+| `notesList` | string[]? | List of private notes added by the user |
 | `topicIds` | string[] | IDs of associated topics |
 
 ### POST /api/items — Create an item
@@ -53,7 +53,7 @@ Use `topicNames` (strings) instead of `topicIds` — the API resolves or creates
   "contentType": "article",
   "sourceName": "Medium",
   "imageUrl": "https://miro.medium.com/example.jpg",
-  "notes": "Suggested by a colleague",
+  "notes": "Suggested by a colleague — appended to the item's notes list",
   "topicNames": ["Productivity", "Deep Work"]
 }
 ```

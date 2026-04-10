@@ -47,7 +47,7 @@ export const createItem = httpAction(async (ctx, request) => {
     contentType,
     sourceName,
     imageUrl,
-    notes,
+    notesList: notes ? [notes] : undefined,
     userId: auth.userId,
     topicIds,
   });
@@ -121,6 +121,16 @@ export const updateItem = httpAction(async (ctx, request) => {
 
   const { title, summary, status, notes, topicIds } = await request.json();
 
+  // If a notes string is provided, append it to the item's notesList
+  let notesList: string[] | undefined;
+  if (notes) {
+    const existing = await ctx.runQuery(internal.items.getInternal, { id, userId: auth.userId });
+    if (existing) {
+      const current = existing.notesList ?? (existing.notes ? [existing.notes] : []);
+      notesList = [...current, notes];
+    }
+  }
+
   try {
     await ctx.runMutation(internal.items.updateInternal, {
       id,
@@ -128,7 +138,7 @@ export const updateItem = httpAction(async (ctx, request) => {
       title,
       summary,
       status,
-      notes,
+      notesList,
       topicIds,
     });
   } catch (e) {
