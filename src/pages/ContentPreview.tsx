@@ -90,6 +90,11 @@ export default function ContentPreview() {
     setNewTagInput("");
   }
 
+  const relatedItems = useQuery(
+    api.search.moreLikeThis,
+    id ? { id: id as Id<"items"> } : "skip"
+  );
+
   const itemTopics =
     item && allTopics
       ? allTopics.filter((t) => item.topicIds.includes(t._id))
@@ -351,6 +356,43 @@ export default function ContentPreview() {
               <span className="text-sm font-medium">{isDeleting ? "Deleting…" : "Delete from Library"}</span>
             </button>
           </div>
+
+          {/* More like this */}
+          {relatedItems && relatedItems.length > 0 && (
+            <div className="bg-surface-container-lowest rounded-xl p-5 editorial-shadow">
+              <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-base">auto_awesome</span>
+                More like this
+              </p>
+              <div className="flex flex-col gap-3">
+                {relatedItems.map((related) => (
+                  <button
+                    key={related._id}
+                    onClick={() => navigate(`/preview/${related._id}`)}
+                    className="text-left group flex items-start gap-3 p-3 rounded-lg hover:bg-surface-container transition-colors"
+                  >
+                    {related.imageUrl && (
+                      <img
+                        src={related.imageUrl}
+                        alt=""
+                        className="w-12 h-12 rounded-md object-cover flex-shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-on-surface line-clamp-2 group-hover:text-primary-container transition-colors">
+                        {related.title ?? "Untitled"}
+                      </p>
+                      {related.sourceName && (
+                        <p className="text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant/60 mt-0.5">
+                          {related.sourceName}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </aside>
       </div>
     </div>

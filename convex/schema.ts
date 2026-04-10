@@ -32,9 +32,15 @@ export default defineSchema({
     notesList: v.optional(v.array(v.string())),
     topicIds: v.array(v.id("topics")),
     isFavorite: v.optional(v.boolean()),
+    embedding: v.optional(v.array(v.float64())),
   })
     .index("by_user", ["userId"])
-    .index("by_user_status", ["userId", "status"]),
+    .index("by_user_status", ["userId", "status"])
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      dimensions: 1536,
+      filterFields: ["userId"],
+    }),
 
   topics: defineTable({
     userId: v.id("users"),

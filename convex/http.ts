@@ -6,6 +6,7 @@ import {
   getItem,
   updateItem,
   deleteItem,
+  semanticSearchItems,
 } from "./httpActions/items";
 import {
   listTopics,
@@ -22,6 +23,7 @@ auth.addHttpRoutes(http);
 // Items
 http.route({ path: "/api/items", method: "POST", handler: createItem });
 http.route({ path: "/api/items", method: "GET", handler: listItems });
+http.route({ path: "/api/items/search", method: "GET", handler: semanticSearchItems });
 http.route({ pathPrefix: "/api/items/", method: "GET", handler: getItem });
 http.route({ pathPrefix: "/api/items/", method: "PATCH", handler: updateItem });
 http.route({ pathPrefix: "/api/items/", method: "DELETE", handler: deleteItem });

@@ -93,6 +93,33 @@ GET /api/items?contentType=video
 
 **Response:** `200 OK` — array of item objects.
 
+### GET /api/items/search — Semantic search
+
+Finds items by meaning, not just keyword matching. Uses vector embeddings to surface conceptually related items.
+
+Query params:
+- `q` *(required)* — natural language query, e.g. `"what should I read about focus?"`
+
+```
+GET /api/items/search?q=stoicism+and+resilience
+GET /api/items/search?q=machine+learning+fundamentals
+```
+
+**Response:** `200 OK` — array of item objects, ordered by relevance. Each item includes a `_score` field (−1 to 1, higher = more relevant).
+
+```json
+[
+  {
+    "_id": "jx7abc123...",
+    "title": "The Obstacle Is the Way",
+    "_score": 0.91,
+    "..."
+  }
+]
+```
+
+Returns `400` if `q` is missing or empty. Items without embeddings (just saved) will not appear in results until their embedding is generated (usually within seconds).
+
 ### GET /api/items/:id — Get one item
 
 **Response:** `200 OK` — item object, or `404` if not found.

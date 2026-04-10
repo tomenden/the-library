@@ -127,8 +127,14 @@ A "hybrid" approach is possible: run both queries and merge by score, but this i
 
 - Explore page: detect if the query is a natural language question vs. a keyword and route accordingly — or just always run both and merge
 - Show a subtle relevance indicator on cards (filled dot = strong match)
-- "More like this" button on ContentPreview: call vector search with the item's own embedding as the query vector (skip the embed step)
 - Results that lack an embedding show at the bottom or are hidden from semantic results
+
+### "More like this"
+
+Lives on the ContentPreview item page, not in search. Each item already has a stored embedding,
+so this is a plain Convex `query` — no OpenAI call, no extra cost, no latency.
+Show 3–5 related items in the right panel below the action buttons. Only render the section when
+at least one result exists and the current item has an embedding.
 
 ## Cost estimate
 

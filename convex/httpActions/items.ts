@@ -154,6 +154,23 @@ export const updateItem = httpAction(async (ctx, request) => {
   return jsonResponse(item);
 });
 
+export const semanticSearchItems = httpAction(async (ctx, request) => {
+  const auth = await authenticateRequest(ctx, request);
+  if (!auth) return errorResponse("Unauthorized", 401);
+
+  const q = new URL(request.url).searchParams.get("q") ?? "";
+  if (!q.trim()) return errorResponse("Missing query parameter: q", 400);
+
+  // semanticSearch is a public action; we run it via ctx.runAction but need to
+  // pass the userId ourselves. Use the internal variant below.
+  const items = await ctx.runAction(internal.search.semanticSearchInternal, {
+    q,
+    userId: auth.userId,
+  });
+
+  return jsonResponse(items);
+});
+
 export const deleteItem = httpAction(async (ctx, request) => {
   const auth = await authenticateRequest(ctx, request);
   if (!auth) return errorResponse("Unauthorized", 401);

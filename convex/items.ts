@@ -3,6 +3,7 @@ import { internalMutation, internalQuery, mutation, query } from "./_generated/s
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Id } from "./_generated/dataModel";
 import { contentTypeValidator, statusValidator } from "./schema";
+import { internal } from "./_generated/api";
 
 // ── Public (session auth) ──────────────────────────────────────────────────
 
@@ -98,6 +99,7 @@ export const addNote = mutation({
     if (!item || item.userId !== userId) throw new Error("Not found");
     const current = item.notesList ?? (item.notes ? [item.notes] : []);
     await ctx.db.patch(id, { notesList: [...current, text] });
+    await ctx.scheduler.runAfter(0, internal.actions.embeddings.generateEmbedding, { itemId: id });
   },
 });
 
@@ -111,6 +113,7 @@ export const deleteNote = mutation({
     const current = item.notesList ?? (item.notes ? [item.notes] : []);
     const next = current.filter((_, i) => i !== index);
     await ctx.db.patch(id, { notesList: next });
+    await ctx.scheduler.runAfter(0, internal.actions.embeddings.generateEmbedding, { itemId: id });
   },
 });
 
@@ -183,11 +186,43 @@ export const toggleFavoriteInternal = internalMutation({
   },
 });
 
+export const setEmbedding = internalMutation({
+  args: { itemId: v.id("items"), embedding: v.array(v.float64()) },
+  handler: async (ctx, { itemId, embedding }) => {
+    await ctx.db.patch(itemId, { embedding });
+  },
+});
+
+export const getForEmbedding = internalQuery({
+  args: { itemId: v.id("items") },
+  handler: async (ctx, { itemId }) => {
+    const item = await ctx.db.get(itemId);
+    if (!item) return null;
+    return {
+      _id: item._id,
+      title: item.title,
+      summary: item.summary,
+      notesList: item.notesList,
+      sourceName: item.sourceName,
+    };
+  },
+});
+
+export const listWithoutEmbedding = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const items = await ctx.db.query("items").collect();
+    return items.filter((i) => !i.embedding).map((i) => ({ _id: i._id }));
+  },
+});
+
 // ── Shared logic ───────────────────────────────────────────────────────────
 
 async function createHandler(ctx: any, args: any): Promise<Id<"items">> {
   const { userId, topicIds = [], notes: _notes, ...rest } = args;
-  return ctx.db.insert("items", { ...rest, userId, status: "saved", topicIds });
+  const itemId = await ctx.db.insert("items", { ...rest, userId, status: "saved", topicIds });
+  await ctx.scheduler.runAfter(0, internal.actions.embeddings.generateEmbedding, { itemId });
+  return itemId;
 }
 
 async function listHandler(ctx: any, args: any): Promise<any[]> {
@@ -224,6 +259,11 @@ async function updateHandler(ctx: any, { id, userId, ...fields }: any): Promise<
     Object.entries(fields).filter(([, v]) => v !== undefined)
   );
   await ctx.db.patch(id, patch);
+  // Re-embed if any text content changed
+  const textFields = ["title", "summary", "notesList", "sourceName"];
+  if (textFields.some((f) => f in patch)) {
+    await ctx.scheduler.runAfter(0, internal.actions.embeddings.generateEmbedding, { itemId: id });
+  }
 }
 
 async function removeHandler(ctx: any, { id, userId }: any): Promise<void> {
