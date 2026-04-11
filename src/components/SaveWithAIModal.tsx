@@ -44,7 +44,7 @@ export default function SaveWithAIModal({ onClose }: Props) {
               auto_fix_high
             </span>
             <h2 className="text-xl font-headline font-light text-on-surface">
-              Save with AI
+              Add with AI
             </h2>
           </div>
           <button

@@ -48,7 +48,7 @@ export default function TopBar({
                        text-on-surface-variant hover:bg-surface-container transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
-            Save with AI
+            Add with AI
           </button>
           <button
             onClick={() => setShowAdd(true)}
