@@ -2,6 +2,15 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 
+export const VALID_CONTENT_TYPES = [
+  "article",
+  "video",
+  "podcast",
+  "tweet",
+  "newsletter",
+] as const;
+export type ContentType = (typeof VALID_CONTENT_TYPES)[number];
+
 export const contentTypeValidator = v.union(
   v.literal("article"),
   v.literal("video"),

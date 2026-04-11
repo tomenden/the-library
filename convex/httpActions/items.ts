@@ -2,12 +2,10 @@ import { httpAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { authenticateRequest, jsonResponse, errorResponse } from "./middleware";
 import { Id } from "../_generated/dataModel";
+import { VALID_CONTENT_TYPES, ContentType } from "../schema";
 
 const VALID_STATUSES = ["saved", "in_progress", "done"] as const;
 type Status = (typeof VALID_STATUSES)[number];
-
-const VALID_CONTENT_TYPES = ["article", "video", "podcast", "tweet", "newsletter"] as const;
-type ContentType = (typeof VALID_CONTENT_TYPES)[number];
 
 function extractId(request: Request): string | null {
   const seg = new URL(request.url).pathname.split("/").pop();
