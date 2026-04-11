@@ -73,6 +73,7 @@ async function enrichUrl(url: string, apiKey: string): Promise<EnrichmentData> {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { responseMimeType: "application/json" },
       }),
+      signal: AbortSignal.timeout(30000),
     }
   );
 
@@ -125,7 +126,6 @@ async function ingestUrlHandler(
   });
 }
 
-// Called from the frontend via useAction — uses session auth
 export const ingestItem = action({
   args: {
     url: v.string(),
@@ -138,14 +138,11 @@ export const ingestItem = action({
   },
 });
 
-// Called from the HTTP action — userId comes from API key auth
 export const ingestItemInternal = internalAction({
   args: {
     userId: v.id("users"),
     url: v.string(),
     notes: v.optional(v.string()),
   },
-  handler: async (ctx, { userId, url, notes }) => {
-    return ingestUrlHandler(ctx, { userId, url, notes });
-  },
+  handler: (ctx, args) => ingestUrlHandler(ctx, args),
 });

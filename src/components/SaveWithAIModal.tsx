@@ -16,11 +16,12 @@ export default function SaveWithAIModal({ onClose }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!url.trim()) return;
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) return;
     setSaving(true);
     setError("");
     try {
-      await ingestItem({ url: url.trim(), notes: notes.trim() || undefined });
+      await ingestItem({ url: trimmedUrl, notes: notes.trim() || undefined });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
