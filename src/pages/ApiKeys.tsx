@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
+import BottomNav from "../components/BottomNav";
 
 export default function ApiKeys() {
   const keys = useQuery(api.apiKeys.list, {});
@@ -43,9 +44,9 @@ export default function ApiKeys() {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <div className="ml-64 flex-1 flex flex-col">
+      <div className="md:ml-64 flex-1 flex flex-col">
         <TopBar />
-        <main className="p-8 max-w-2xl">
+        <main className="px-4 md:px-8 pt-6 md:pt-8 pb-28 md:pb-8 max-w-2xl">
           <div className="mb-10">
             <p className="text-[0.6875rem] font-bold tracking-[0.1em] uppercase text-on-surface-variant mb-3">
               Settings
@@ -160,6 +161,7 @@ export default function ApiKeys() {
           </ul>
         </main>
       </div>
+      <BottomNav />
     </div>
   );
 }

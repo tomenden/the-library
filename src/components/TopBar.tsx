@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import AddContentModal from "./AddContentModal";
 import SaveWithAIModal from "./SaveWithAIModal";
 
@@ -18,7 +19,29 @@ export default function TopBar({
 
   return (
     <>
-      <header className="flex justify-between items-center px-8 w-full sticky top-0 h-16 bg-background/80 backdrop-blur-2xl z-50">
+      {/* Mobile header */}
+      <header className="md:hidden flex items-center justify-between px-6 h-14 bg-background/80 backdrop-blur-2xl sticky top-0 z-50">
+        <button
+          onClick={() => setShowAIAdd(true)}
+          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant"
+          aria-label="Add with AI"
+        >
+          <span className="material-symbols-outlined text-[22px]">add</span>
+        </button>
+        <h1 className="font-headline italic text-xl text-primary-container tracking-tight">
+          The Library
+        </h1>
+        <NavLink
+          to="/explore"
+          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant"
+          aria-label="Search"
+        >
+          <span className="material-symbols-outlined text-[22px]">search</span>
+        </NavLink>
+      </header>
+
+      {/* Desktop header */}
+      <header className="hidden md:flex justify-between items-center px-8 w-full sticky top-0 h-16 bg-background/80 backdrop-blur-2xl z-50">
         {showBrandName ? (
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-headline italic text-primary-container">The Gallery</h2>
@@ -58,6 +81,7 @@ export default function TopBar({
           </button>
         </div>
       </header>
+
       {showAdd && <AddContentModal onClose={() => setShowAdd(false)} />}
       {showAIAdd && <SaveWithAIModal onClose={() => setShowAIAdd(false)} />}
     </>

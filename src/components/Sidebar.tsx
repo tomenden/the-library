@@ -35,7 +35,7 @@ export default function Sidebar() {
   const labelClass = 'text-[0.6875rem] font-bold tracking-[0.05em] uppercase font-sans';
 
   return (
-    <aside className="fixed left-0 top-0 h-full z-40 w-64 bg-surface-container-low border-r-0 flex flex-col">
+    <aside className="fixed left-0 top-0 h-full z-40 w-64 bg-surface-container-low border-r-0 hidden md:flex flex-col">
       <div className="px-8 py-8 mb-2">
         <h1 className="text-2xl font-headline italic text-primary-container">The Library</h1>
         <p className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-secondary-container mt-1">

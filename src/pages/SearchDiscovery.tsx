@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
+import BottomNav from "../components/BottomNav";
 
 type SearchMode = "keyword" | "semantic";
 
@@ -25,15 +26,9 @@ export default function SearchDiscovery() {
 
   const runSemanticSearch = useAction(api.search.semanticSearch);
 
-  // Trigger semantic search with debounce when in semantic mode
   useEffect(() => {
     if (mode !== "semantic") return;
-
-    if (!q.trim()) {
-      setSemanticResults(null);
-      return;
-    }
-
+    if (!q.trim()) { setSemanticResults(null); return; }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setIsSearching(true);
@@ -46,13 +41,9 @@ export default function SearchDiscovery() {
         setIsSearching(false);
       }
     }, 600);
-
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [q, mode]);
 
-  // Reset semantic results when switching modes
   function switchMode(newMode: SearchMode) {
     setMode(newMode);
     setSemanticResults(null);
@@ -70,22 +61,23 @@ export default function SearchDiscovery() {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <div className="ml-64 flex-1 flex flex-col">
+      <div className="md:ml-64 flex-1 flex flex-col">
         <TopBar showSearch={false} showBrandName />
 
         <main className="flex-1">
-          <section className="max-w-6xl mx-auto px-8 pt-12 pb-24">
+          <section className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-12 pb-28 md:pb-24">
+
             {/* Search bar */}
-            <div className="flex flex-col items-center text-center mb-12">
-              <h1 className="text-5xl md:text-6xl font-headline text-on-surface leading-tight mb-8">
+            <div className="flex flex-col items-center text-center mb-8 md:mb-12">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline text-on-surface leading-tight mb-6 md:mb-8">
                 Seek with <span className="italic font-light">Intent</span>
               </h1>
               <div className="relative w-full max-w-3xl">
-                <span className="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-on-surface-variant text-2xl">
+                <span className="material-symbols-outlined absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl md:text-2xl">
                   search
                 </span>
                 <input
-                  className="w-full pl-16 pr-6 py-6 bg-surface-container-lowest border-none rounded-2xl text-xl font-sans placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 editorial-shadow transition-all"
+                  className="w-full pl-12 md:pl-16 pr-4 md:pr-6 py-4 md:py-6 bg-surface-container-lowest border-none rounded-2xl text-base md:text-xl font-sans placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 editorial-shadow transition-all"
                   placeholder={mode === "semantic" ? "Ask anything about your library…" : "Search your library..."}
                   type="text"
                   value={q}
@@ -95,7 +87,7 @@ export default function SearchDiscovery() {
                 {q && (
                   <button
                     onClick={() => { setQ(""); setSemanticResults(null); }}
-                    className="absolute right-6 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
+                    className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
                   >
                     <span className="material-symbols-outlined">close</span>
                   </button>
@@ -130,9 +122,41 @@ export default function SearchDiscovery() {
               </div>
             </div>
 
+            {/* Mobile: tag filter as horizontal scroll strip */}
+            {mode === "keyword" && topics && topics.length > 0 && (
+              <div className="flex md:hidden gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
+                {topics.map((topic) => {
+                  const active = selectedTopicId === topic._id;
+                  return (
+                    <button
+                      key={topic._id}
+                      onClick={() => toggleTopic(topic._id)}
+                      className={[
+                        "flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors",
+                        active
+                          ? "bg-primary-container text-on-primary-container"
+                          : "bg-surface-container-high text-on-surface-variant",
+                      ].join(" ")}
+                    >
+                      {topic.name}
+                    </button>
+                  );
+                })}
+                {selectedTopicId && (
+                  <button
+                    onClick={() => setSelectedTopicId(undefined)}
+                    className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-error-container/30 text-error"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Desktop: sidebar layout */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-              {/* Left: Tag filter (keyword mode only) */}
-              <div className="md:col-span-3">
+              {/* Left: Tag filter (desktop only, keyword mode) */}
+              <div className="hidden md:block md:col-span-3">
                 {mode === "keyword" && (
                   <>
                     <h3 className="text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-4 flex items-center gap-2">
@@ -143,11 +167,9 @@ export default function SearchDiscovery() {
                     {topics === undefined && (
                       <p className="text-sm text-on-surface-variant/60">Loading…</p>
                     )}
-
                     {topics?.length === 0 && (
                       <p className="text-sm text-on-surface-variant/60">No tags yet.</p>
                     )}
-
                     {topics && topics.length > 0 && (
                       <div className="flex flex-col gap-1">
                         {topics.map((topic) => {
@@ -170,7 +192,6 @@ export default function SearchDiscovery() {
                             </button>
                           );
                         })}
-
                         {selectedTopicId && (
                           <button
                             onClick={() => setSelectedTopicId(undefined)}
@@ -197,7 +218,7 @@ export default function SearchDiscovery() {
                 )}
               </div>
 
-              {/* Right: Results */}
+              {/* Results */}
               <div className="md:col-span-9">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-headline italic text-on-surface">
@@ -240,7 +261,7 @@ export default function SearchDiscovery() {
                 )}
 
                 {!isLoading && results && results.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                     {results.map((item) => (
                       <article
                         key={item._id}
@@ -256,7 +277,7 @@ export default function SearchDiscovery() {
                             />
                           </div>
                         )}
-                        <div className="p-5 flex flex-col flex-grow">
+                        <div className="p-4 md:p-5 flex flex-col flex-grow">
                           <div className="flex items-center justify-between mb-2">
                             <p className="text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant/60">
                               {item.sourceName ?? ""}
@@ -293,6 +314,7 @@ export default function SearchDiscovery() {
           </section>
         </main>
       </div>
+      <BottomNav />
     </div>
   );
 }
