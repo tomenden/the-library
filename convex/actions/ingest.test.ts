@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { expect, test } from "vitest";
-import { truncateHtml, parseEnrichmentResponse, extractImageUrl } from "./ingest";
+import { truncateHtml, cleanHtml, parseEnrichmentResponse, extractImageUrl } from "./ingest";
 
 // truncateHtml
 
@@ -15,6 +15,34 @@ test("truncateHtml: truncates to maxChars", () => {
 test("truncateHtml: uses 50000 as default limit", () => {
   const long = "a".repeat(60000);
   expect(truncateHtml(long)).toHaveLength(50000);
+});
+
+// cleanHtml
+
+test("cleanHtml: removes script tags and their content", () => {
+  expect(cleanHtml(`<p>Hello</p><script>alert('xss')</script>`)).toBe("Hello");
+});
+
+test("cleanHtml: removes style tags and their content", () => {
+  expect(cleanHtml(`<style>.foo { color: red }</style><p>Article</p>`)).toBe("Article");
+});
+
+test("cleanHtml: removes nav, header, footer, aside", () => {
+  const html = `<header>Site Header</header><main><p>Content</p></main><footer>Footer</footer>`;
+  expect(cleanHtml(html)).toBe("Content");
+});
+
+test("cleanHtml: removes HTML comments", () => {
+  expect(cleanHtml(`<!-- comment --><p>Text</p>`)).toBe("Text");
+});
+
+test("cleanHtml: collapses whitespace", () => {
+  expect(cleanHtml(`<p>Hello   \n\n   world</p>`)).toBe("Hello world");
+});
+
+test("cleanHtml: preserves text from nested elements", () => {
+  const html = `<article><h1>Title</h1><p>Body text here.</p></article>`;
+  expect(cleanHtml(html)).toBe("Title Body text here.");
 });
 
 // parseEnrichmentResponse

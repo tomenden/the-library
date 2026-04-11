@@ -21,6 +21,24 @@ export function truncateHtml(html: string, maxChars = 50000): string {
   return html.length > maxChars ? html.slice(0, maxChars) : html;
 }
 
+export function cleanHtml(html: string): string {
+  return html
+    // Remove tags whose content is never useful to an LLM
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, "")
+    .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, "")
+    // Remove structural boilerplate elements
+    .replace(/<(nav|header|footer|aside)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
+    // Remove HTML comments
+    .replace(/<!--[\s\S]*?-->/g, "")
+    // Strip remaining tags, keeping text
+    .replace(/<[^>]+>/g, " ")
+    // Collapse whitespace
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function parseEnrichmentResponse(text: string): EnrichmentData {
   try {
     const data = JSON.parse(text);
@@ -77,18 +95,18 @@ async function enrichUrl(url: string, apiKey: string, existingTopics: string[]):
     throw new Error(`Failed to fetch URL (${pageRes.status}): ${url}`);
   }
   const html = await pageRes.text();
-  const truncated = truncateHtml(html);
-  const imageUrl = extractImageUrl(truncated, url);
+  const imageUrl = extractImageUrl(html, url);
+  const content = truncateHtml(cleanHtml(html), 15000);
 
   const prompt =
-    `You are a content metadata extractor. Given the HTML of a webpage, extract the following as JSON:\n` +
+    `You are a content metadata extractor. Given the text content of a webpage, extract the following as JSON:\n` +
     `- title: a meaningful, descriptive title for the content. Use the page's own title if it clearly represents the content; otherwise generate a concise, accurate title from the body text (string)\n` +
-    `- summary: a 2-3 sentence summary of the actual content. Use the body text, not just meta tags (string)\n` +
+    `- summary: a 2-3 sentence summary of the actual content. For videos, use the video description. For articles, summarise the body text (string)\n` +
     `- contentType: one of "article", "video", "podcast", "tweet", "newsletter" — or null if none fit\n` +
     `- sourceName: the name of the source/publication/platform (e.g. "YouTube", "Medium", "Substack") — or null\n` +
     `- topicNames: an array of 1-4 relevant topic tags as short title-case strings (e.g. ["Machine Learning", "Python"]). Prefer reusing tags from the existing list below when they closely match — only introduce new tags when nothing in the list fits.\n\n` +
     `Existing tags: ${existingTopics.length > 0 ? existingTopics.join(", ") : "none yet"}\n\n` +
-    `Respond with only valid JSON, no explanation.\n\nURL: ${url}\n\nHTML:\n${truncated}`;
+    `Respond with only valid JSON, no explanation.\n\nURL: ${url}\n\nContent:\n${content}`;
 
   const geminiRes = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
