@@ -36,6 +36,11 @@
       "sourceType": "github",
       "computedHash": "71cc23e9ec5fc6361e12453495fa8c683f6cf26f3efaf9b230b0f43e0a32cc96"
     },
+    "expect": {
+      "source": "millionco/expect",
+      "sourceType": "github",
+      "computedHash": "2bf046b63a3a614a713ecdb62e1704141b345d22f69232802e9be9c6b5f05a45"
+    },
     "react:components": {
       "source": "google-labs-code/stitch-skills",
       "sourceType": "github",
