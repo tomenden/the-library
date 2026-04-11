@@ -14,6 +14,7 @@ export interface EnrichmentData {
   contentType?: ContentType;
   sourceName?: string;
   topicNames: string[];
+  imageUrl?: string;
 }
 
 export function truncateHtml(html: string, maxChars = 50000): string {
@@ -41,6 +42,29 @@ export function parseEnrichmentResponse(text: string): EnrichmentData {
   }
 }
 
+function metaContent(html: string, attr: string, val: string): RegExpMatchArray | null {
+  return html.match(new RegExp(`<meta\\s[^>]*${attr}=["']${val}["'][^>]*content=["']([^"']+)["']`, "i"))
+    ?? html.match(new RegExp(`<meta\\s[^>]*content=["']([^"']+)["'][^>]*${attr}=["']${val}["']`, "i"));
+}
+
+export function extractImageUrl(html: string, baseUrl: string): string | undefined {
+  const ogMatch = metaContent(html, "property", "og:image");
+  if (ogMatch?.[1]) return new URL(ogMatch[1], baseUrl).href;
+
+  const twMatch = metaContent(html, "name", "twitter:image");
+  if (twMatch?.[1]) return new URL(twMatch[1], baseUrl).href;
+
+  const imgMatch = html.match(/<img\s[^>]*src=["']([^"']+)["']/i);
+  if (imgMatch?.[1]) {
+    const resolved = new URL(imgMatch[1], baseUrl).href;
+    if (resolved.startsWith("https://") || resolved.startsWith("http://")) {
+      return resolved;
+    }
+  }
+
+  return undefined;
+}
+
 async function enrichUrl(url: string, apiKey: string, existingTopics: string[]): Promise<EnrichmentData> {
   const pageRes = await fetch(url, {
     headers: {
@@ -54,6 +78,7 @@ async function enrichUrl(url: string, apiKey: string, existingTopics: string[]):
   }
   const html = await pageRes.text();
   const truncated = truncateHtml(html);
+  const imageUrl = extractImageUrl(truncated, url);
 
   const prompt =
     `You are a content metadata extractor. Given the HTML of a webpage, extract the following as JSON:\n` +
@@ -86,7 +111,7 @@ async function enrichUrl(url: string, apiKey: string, existingTopics: string[]):
   const geminiJson = await geminiRes.json();
   const responseText: string =
     geminiJson.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-  return parseEnrichmentResponse(responseText);
+  return { ...parseEnrichmentResponse(responseText), imageUrl };
 }
 
 async function ingestUrlHandler(
@@ -124,6 +149,7 @@ async function ingestUrlHandler(
     summary: enrichment.summary,
     contentType: enrichment.contentType,
     sourceName: enrichment.sourceName,
+    imageUrl: enrichment.imageUrl,
     notesList: notes ? [notes] : undefined,
     topicIds,
   });

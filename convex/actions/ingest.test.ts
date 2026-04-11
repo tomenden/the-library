@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { expect, test } from "vitest";
-import { truncateHtml, parseEnrichmentResponse } from "./ingest";
+import { truncateHtml, parseEnrichmentResponse, extractImageUrl } from "./ingest";
 
 // truncateHtml
 
@@ -53,4 +53,47 @@ test("parseEnrichmentResponse: filters non-string topicNames", () => {
 test("parseEnrichmentResponse: treats null sourceName as undefined", () => {
   const input = JSON.stringify({ sourceName: null, topicNames: [] });
   expect(parseEnrichmentResponse(input).sourceName).toBeUndefined();
+});
+
+// extractImageUrl
+
+const BASE = "https://example.com";
+
+test("extractImageUrl: returns og:image (property before content)", () => {
+  const html = `<meta property="og:image" content="https://example.com/img.jpg">`;
+  expect(extractImageUrl(html, BASE)).toBe("https://example.com/img.jpg");
+});
+
+test("extractImageUrl: returns og:image (content before property)", () => {
+  const html = `<meta content="https://example.com/img.jpg" property="og:image">`;
+  expect(extractImageUrl(html, BASE)).toBe("https://example.com/img.jpg");
+});
+
+test("extractImageUrl: falls back to twitter:image when no og:image", () => {
+  const html = `<meta name="twitter:image" content="https://example.com/tw.jpg">`;
+  expect(extractImageUrl(html, BASE)).toBe("https://example.com/tw.jpg");
+});
+
+test("extractImageUrl: falls back to first img src when no meta tags", () => {
+  const html = `<img src="https://example.com/photo.png" alt="photo">`;
+  expect(extractImageUrl(html, BASE)).toBe("https://example.com/photo.png");
+});
+
+test("extractImageUrl: resolves relative og:image URL", () => {
+  const html = `<meta property="og:image" content="/images/cover.jpg">`;
+  expect(extractImageUrl(html, BASE)).toBe("https://example.com/images/cover.jpg");
+});
+
+test("extractImageUrl: returns undefined when no image found", () => {
+  expect(extractImageUrl("<html><body>no images here</body></html>", BASE)).toBeUndefined();
+});
+
+test("extractImageUrl: rejects data: URI in img src", () => {
+  const html = `<img src="data:image/png;base64,abc123">`;
+  expect(extractImageUrl(html, BASE)).toBeUndefined();
+});
+
+test("extractImageUrl: rejects javascript: URI in img src", () => {
+  const html = `<img src="javascript:void(0)">`;
+  expect(extractImageUrl(html, BASE)).toBeUndefined();
 });

@@ -33,6 +33,14 @@ Full API reference: [API Documentation](https://the-library-sigma.vercel.app/llm
 
 ## Saving an item
 
+**Step 1 — fetch existing topics** (always do this first):
+```
+GET /api/topics
+Authorization: Bearer <api-key>
+```
+Returns an array of `{ "_id": "...", "name": "..." }` objects. Use these names directly in `topicNames` when they closely match the content — this prevents tag sprawl (e.g. avoid creating "AI" when "Artificial Intelligence" already exists, or "ML" when "Machine Learning" is there).
+
+**Step 2 — create the item:**
 ```
 POST /api/items
 Content-Type: application/json
@@ -44,12 +52,13 @@ Authorization: Bearer <api-key>
   "summary": "One sentence: what it is and why it matters",
   "contentType": "article" | "video" | "podcast" | "tweet" | "newsletter",
   "sourceName": "YouTube" | "Medium" | "Substack" | "Twitter" | etc.,
+  "imageUrl": "https://... (OG image or representative thumbnail, if available)",
   "notes": "Why the user is saving this — context from conversation",
   "topicNames": ["tag1", "tag2"]
 }
 ```
 
-`url` is the only required field. Infer everything else from context.
+`url` is the only required field. Infer everything else from context. For `imageUrl`, use the page's OG/Twitter card image if you fetched the page, or omit if unknown.
 
 **Response:** `201 Created` with the saved item object including `_id`.
 
@@ -95,7 +104,7 @@ save it without waiting to be asked — then confirm: "I saved that to your libr
 - **Title:** concise and descriptive (not a full URL)
 - **Summary:** one sentence on *what it is* + *why it's worth saving*
 - **Notes:** conversation context — who recommended it, what question it answers
-- **Topics:** specific enough to be useful (e.g. `LLMs`, `Sleep`, `Investing` — not `Technology`)
+- **Topics:** specific enough to be useful (e.g. `LLMs`, `Sleep`, `Investing` — not `Technology`). Always reuse an existing tag when it's a close match — only introduce a new tag when nothing in the list fits.
 
 **Content type inference:**
 - YouTube, Vimeo, Loom → `video`

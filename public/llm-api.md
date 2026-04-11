@@ -50,6 +50,8 @@ An **item** represents one saved link.
 
 Use `topicNames` (strings) instead of `topicIds` — the API resolves or creates topics automatically.
 
+**Tag reuse:** Before creating items, call `GET /api/topics` to retrieve the existing tag list. Prefer exact or close matches from that list over introducing new tags — this prevents duplicates like `"AI"` and `"Artificial Intelligence"` coexisting.
+
 **Request:**
 ```json
 {
