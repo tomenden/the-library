@@ -57,8 +57,8 @@ async function enrichUrl(url: string, apiKey: string): Promise<EnrichmentData> {
 
   const prompt =
     `You are a content metadata extractor. Given the HTML of a webpage, extract the following as JSON:\n` +
-    `- title: the title of the content (string)\n` +
-    `- summary: a 2-3 sentence summary of the content (string)\n` +
+    `- title: the title of the content. Use og:title or the page <title> if meaningful. If the title is missing, empty, a single character, or clearly a placeholder (e.g. "-", "Untitled"), derive a descriptive title from the body text instead (string)\n` +
+    `- summary: a 2-3 sentence summary of the actual content. Use the body text, not just meta tags (string)\n` +
     `- contentType: one of "article", "video", "podcast", "tweet", "newsletter" — or null if none fit\n` +
     `- sourceName: the name of the source/publication/platform (e.g. "YouTube", "Medium", "Substack") — or null\n` +
     `- topicNames: an array of 1-4 relevant topic tags as short title-case strings (e.g. ["Machine Learning", "Python"])\n\n` +
