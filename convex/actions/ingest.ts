@@ -41,7 +41,7 @@ export function parseEnrichmentResponse(text: string): EnrichmentData {
   }
 }
 
-async function enrichUrl(url: string, apiKey: string): Promise<EnrichmentData> {
+async function enrichUrl(url: string, apiKey: string, existingTopics: string[]): Promise<EnrichmentData> {
   const pageRes = await fetch(url, {
     headers: {
       "User-Agent":
@@ -61,11 +61,12 @@ async function enrichUrl(url: string, apiKey: string): Promise<EnrichmentData> {
     `- summary: a 2-3 sentence summary of the actual content. Use the body text, not just meta tags (string)\n` +
     `- contentType: one of "article", "video", "podcast", "tweet", "newsletter" — or null if none fit\n` +
     `- sourceName: the name of the source/publication/platform (e.g. "YouTube", "Medium", "Substack") — or null\n` +
-    `- topicNames: an array of 1-4 relevant topic tags as short title-case strings (e.g. ["Machine Learning", "Python"])\n\n` +
+    `- topicNames: an array of 1-4 relevant topic tags as short title-case strings (e.g. ["Machine Learning", "Python"]). Prefer reusing tags from the existing list below when they closely match — only introduce new tags when nothing in the list fits.\n\n` +
+    `Existing tags: ${existingTopics.length > 0 ? existingTopics.join(", ") : "none yet"}\n\n` +
     `Respond with only valid JSON, no explanation.\n\nURL: ${url}\n\nHTML:\n${truncated}`;
 
   const geminiRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -102,7 +103,9 @@ async function ingestUrlHandler(
 
   if (apiKey) {
     try {
-      enrichment = await enrichUrl(url, apiKey);
+      const existingTopics = await ctx.runQuery(internal.topics.listInternal, { userId });
+      const existingTopicNames = existingTopics.map((t) => t.name);
+      enrichment = await enrichUrl(url, apiKey, existingTopicNames);
     } catch (e) {
       console.error("Enrichment failed, saving URL only:", e);
     }
