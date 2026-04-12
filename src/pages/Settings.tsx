@@ -1,6 +1,6 @@
 import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
@@ -52,6 +52,19 @@ export default function Settings() {
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="bg-surface-container rounded-xl mb-6 overflow-hidden">
+            <NavLink
+              to="/settings/api-keys"
+              className="flex items-center justify-between px-6 py-4 hover:bg-surface-container-high transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-[20px] text-on-surface-variant">key</span>
+                <span className="text-sm font-medium text-on-surface">API Keys</span>
+              </div>
+              <span className="material-symbols-outlined text-[18px] text-on-surface-variant">chevron_right</span>
+            </NavLink>
           </div>
 
           <button
