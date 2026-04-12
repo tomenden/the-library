@@ -4,25 +4,32 @@ import { api } from "../../convex/_generated/api";
 
 interface Props {
   onClose: () => void;
+  onSwitchToManual: (url: string) => void;
 }
 
-export default function SaveWithAIModal({ onClose }: Props) {
+export default function SaveWithAIModal({ onClose, onSwitchToManual }: Props) {
   const ingestItem = useAction(api.actions.ingest.ingestItem);
 
   const [url, setUrl] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [enrichmentFailed, setEnrichmentFailed] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(e?: React.FormEvent) {
+    e?.preventDefault();
     const trimmedUrl = url.trim();
     if (!trimmedUrl) return;
     setSaving(true);
     setError("");
+    setEnrichmentFailed(false);
     try {
-      await ingestItem({ url: trimmedUrl, notes: notes.trim() || undefined });
-      onClose();
+      const result = await ingestItem({ url: trimmedUrl, notes: notes.trim() || undefined });
+      if (result?.enrichmentFailed) {
+        setEnrichmentFailed(true);
+      } else {
+        onClose();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
@@ -74,6 +81,49 @@ export default function SaveWithAIModal({ onClose }: Props) {
             <p className="text-xs text-on-surface-variant/60">
               This usually takes a few seconds
             </p>
+          </div>
+        ) : enrichmentFailed ? (
+          <div className="flex flex-col items-center justify-center py-6 gap-4">
+            <span className="material-symbols-outlined text-5xl text-on-surface-variant/60">
+              cloud_off
+            </span>
+            <div className="text-center space-y-1">
+              <p className="font-headline font-light text-xl text-on-surface">
+                Analysis unavailable
+              </p>
+              <p className="text-sm text-on-surface-variant">
+                The AI service couldn't process this link right now.
+              </p>
+            </div>
+
+            <div className="w-full space-y-2 pt-2">
+              <button
+                onClick={() => handleSubmit()}
+                className="w-full px-5 py-2.5 bg-primary-container text-on-primary-container rounded-xl
+                           text-[0.6875rem] font-bold uppercase tracking-wider
+                           flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+              >
+                <span className="material-symbols-outlined text-[18px]">refresh</span>
+                Try Again
+              </button>
+              <button
+                onClick={() => onSwitchToManual(trimmedUrl)}
+                className="w-full px-5 py-2.5 rounded-xl border border-outline-variant
+                           text-[0.6875rem] font-bold uppercase tracking-wider text-on-surface-variant
+                           flex items-center justify-center gap-2 hover:bg-surface-container transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">edit</span>
+                Add Manually
+              </button>
+              <button
+                onClick={onClose}
+                className="w-full px-5 py-2.5 rounded-xl
+                           text-[0.6875rem] font-bold uppercase tracking-wider text-on-surface-variant/60
+                           hover:text-on-surface-variant transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -83,7 +83,96 @@ export function extractImageUrl(html: string, baseUrl: string): string | undefin
   return undefined;
 }
 
-async function enrichUrl(url: string, apiKey: string, existingTopics: string[]): Promise<EnrichmentData> {
+// ── LLM provider helpers ──────────────────────────────────────────────────
+
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
+const MAX_RETRIES = 2;
+
+async function fetchWithRetry(
+  input: string,
+  init: RequestInit,
+  retries = MAX_RETRIES
+): Promise<Response> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(input, init);
+    if (res.ok || !RETRYABLE_STATUS_CODES.has(res.status) || attempt === retries) {
+      return res;
+    }
+    const delay = 1000 * Math.pow(2, attempt);
+    console.log(`LLM API returned ${res.status}, retrying in ${delay}ms (attempt ${attempt + 1}/${retries})`);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+  throw new Error("fetchWithRetry: exhausted retries");
+}
+
+async function callGemini(apiKey: string, prompt: string): Promise<string> {
+  const res = await fetchWithRetry(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json" },
+      }),
+      signal: AbortSignal.timeout(30000),
+    }
+  );
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Gemini API error ${res.status}: ${err}`);
+  }
+  const json = await res.json();
+  return json.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+}
+
+const OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
+
+async function callOpenRouter(apiKey: string, prompt: string): Promise<string> {
+  const res = await fetchWithRetry(
+    "https://openrouter.ai/api/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+        "HTTP-Referer": "https://the-library-sigma.vercel.app",
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        messages: [
+          { role: "user", content: prompt },
+        ],
+        response_format: { type: "json_object" },
+      }),
+      signal: AbortSignal.timeout(30000),
+    }
+  );
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`OpenRouter API error ${res.status}: ${err}`);
+  }
+  const json = await res.json();
+  return json.choices?.[0]?.message?.content ?? "{}";
+}
+
+// ── Enrichment pipeline ───────────────────────────────────────────────────
+
+function buildEnrichmentPrompt(url: string, content: string, existingTopics: string[]): string {
+  return (
+    `You are a content metadata extractor. Given the text content of a webpage, extract the following as JSON:\n` +
+    `- title: a meaningful, descriptive title for the content. Use the page's own title if it clearly represents the content; otherwise generate a concise, accurate title from the body text (string)\n` +
+    `- summary: a 2-3 sentence summary of the actual content. For videos, use the video description. For articles, summarise the body text (string)\n` +
+    `- contentType: one of "article", "video", "podcast", "tweet", "newsletter" — or null if none fit\n` +
+    `- sourceName: the name of the source/publication/platform (e.g. "YouTube", "Medium", "Substack") — or null\n` +
+    `- topicNames: an array of 1-4 relevant topic tags as short title-case strings (e.g. ["Machine Learning", "Python"]). Prefer reusing tags from the existing list below when they closely match — only introduce new tags when nothing in the list fits.\n\n` +
+    `Existing tags: ${existingTopics.length > 0 ? existingTopics.join(", ") : "none yet"}\n\n` +
+    `Respond with only valid JSON, no explanation.\n\nURL: ${url}\n\nContent:\n${content}`
+  );
+}
+
+async function enrichUrl(url: string, existingTopics: string[]): Promise<EnrichmentData> {
+  // 1. Fetch page content (shared across providers)
   const pageRes = await fetch(url, {
     headers: {
       "User-Agent":
@@ -97,60 +186,65 @@ async function enrichUrl(url: string, apiKey: string, existingTopics: string[]):
   const html = await pageRes.text();
   const imageUrl = extractImageUrl(html, url);
   const content = truncateHtml(cleanHtml(html), 15000);
+  const prompt = buildEnrichmentPrompt(url, content, existingTopics);
 
-  const prompt =
-    `You are a content metadata extractor. Given the text content of a webpage, extract the following as JSON:\n` +
-    `- title: a meaningful, descriptive title for the content. Use the page's own title if it clearly represents the content; otherwise generate a concise, accurate title from the body text (string)\n` +
-    `- summary: a 2-3 sentence summary of the actual content. For videos, use the video description. For articles, summarise the body text (string)\n` +
-    `- contentType: one of "article", "video", "podcast", "tweet", "newsletter" — or null if none fit\n` +
-    `- sourceName: the name of the source/publication/platform (e.g. "YouTube", "Medium", "Substack") — or null\n` +
-    `- topicNames: an array of 1-4 relevant topic tags as short title-case strings (e.g. ["Machine Learning", "Python"]). Prefer reusing tags from the existing list below when they closely match — only introduce new tags when nothing in the list fits.\n\n` +
-    `Existing tags: ${existingTopics.length > 0 ? existingTopics.join(", ") : "none yet"}\n\n` +
-    `Respond with only valid JSON, no explanation.\n\nURL: ${url}\n\nContent:\n${content}`;
+  // 2. Try Gemini first, then OpenRouter fallback
+  let responseText: string | undefined;
 
-  const geminiRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json" },
-      }),
-      signal: AbortSignal.timeout(30000),
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    try {
+      responseText = await callGemini(geminiKey, prompt);
+    } catch (e) {
+      console.error("Gemini enrichment failed:", e);
     }
-  );
-
-  if (!geminiRes.ok) {
-    const err = await geminiRes.text();
-    throw new Error(`Gemini API error ${geminiRes.status}: ${err}`);
   }
 
-  const geminiJson = await geminiRes.json();
-  const responseText: string =
-    geminiJson.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+  if (!responseText) {
+    const orKey = process.env.OPENROUTER_API_KEY;
+    if (orKey) {
+      console.log("Falling back to OpenRouter for enrichment");
+      try {
+        responseText = await callOpenRouter(orKey, prompt);
+      } catch (e) {
+        console.error("OpenRouter fallback failed:", e);
+      }
+    }
+  }
+
+  if (!responseText) {
+    throw new Error("All enrichment providers failed");
+  }
+
   return { ...parseEnrichmentResponse(responseText), imageUrl };
 }
 
+// Shared: resolve enrichment + topics, then create item.
+// returnOnEnrichmentFailure = true → return { itemId: null, enrichmentFailed: true } (frontend modal)
+// returnOnEnrichmentFailure = false → save bare URL on failure (HTTP API)
 async function ingestUrlHandler(
   ctx: ActionCtx,
-  { userId, url, notes }: { userId: Id<"users">; url: string; notes?: string }
-): Promise<Id<"items">> {
+  { userId, url, notes, returnOnEnrichmentFailure = false }:
+    { userId: Id<"users">; url: string; notes?: string; returnOnEnrichmentFailure?: boolean }
+): Promise<any> {
   const parsed = new URL(url);
   if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
     throw new Error("Only http and https URLs are supported");
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
   let enrichment: EnrichmentData = { topicNames: [] };
+  let enrichmentStatus: "enriched" | "failed" | undefined;
 
-  if (apiKey) {
-    try {
-      const existingTopics = await ctx.runQuery(internal.topics.listInternal, { userId });
-      const existingTopicNames = existingTopics.map((t) => t.name);
-      enrichment = await enrichUrl(url, apiKey, existingTopicNames);
-    } catch (e) {
-      console.error("Enrichment failed, saving URL only:", e);
+  try {
+    const existingTopics = await ctx.runQuery(internal.topics.listInternal, { userId });
+    const existingTopicNames = existingTopics.map((t) => t.name);
+    enrichment = await enrichUrl(url, existingTopicNames);
+    enrichmentStatus = "enriched";
+  } catch (e) {
+    console.error("Enrichment failed:", e);
+    enrichmentStatus = "failed";
+    if (returnOnEnrichmentFailure) {
+      return { itemId: null, enrichmentFailed: true };
     }
   }
 
@@ -160,7 +254,7 @@ async function ingestUrlHandler(
     )
   );
 
-  return ctx.runMutation(internal.items.createInternal, {
+  const itemId = await ctx.runMutation(internal.items.createInternal, {
     userId,
     url,
     title: enrichment.title,
@@ -170,21 +264,68 @@ async function ingestUrlHandler(
     imageUrl: enrichment.imageUrl,
     notesList: notes ? [notes] : undefined,
     topicIds,
+    enrichmentStatus,
   });
+
+  if (returnOnEnrichmentFailure) {
+    return { itemId, enrichmentFailed: false };
+  }
+  return itemId;
 }
 
+// Frontend action — returns enrichment status so the modal can offer choices on failure.
+// (Convex sanitizes thrown errors in production, so we return a result object instead.)
 export const ingestItem = action({
   args: {
     url: v.string(),
     notes: v.optional(v.string()),
   },
-  handler: async (ctx, { url, notes }) => {
+  handler: async (ctx, { url, notes }): Promise<{ itemId: string | null; enrichmentFailed: boolean }> => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Unauthenticated");
-    return ingestUrlHandler(ctx, { userId, url, notes });
+    return ingestUrlHandler(ctx, { userId, url, notes, returnOnEnrichmentFailure: true });
   },
 });
 
+// Re-enrich an existing item (retry from ContentPreview)
+export const reEnrich = action({
+  args: { id: v.id("items") },
+  handler: async (ctx, { id }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthenticated");
+
+    const item = await ctx.runQuery(internal.items.getInternal, { id, userId });
+    if (!item) throw new Error("Not found");
+
+    const existingTopics = await ctx.runQuery(internal.topics.listInternal, { userId });
+    const existingTopicNames = existingTopics.map((t: { name: string }) => t.name);
+
+    const enrichment = await enrichUrl(item.url, existingTopicNames);
+
+    const topicIds = await Promise.all(
+      enrichment.topicNames.map((name) =>
+        ctx.runMutation(internal.topics.resolveOrCreate, { userId, name })
+      )
+    );
+
+    const existingTopicIds = item.topicIds ?? [];
+    const mergedTopicIds = [...new Set([...existingTopicIds, ...topicIds])];
+
+    await ctx.runMutation(internal.items.updateEnrichment, {
+      id,
+      userId,
+      title: enrichment.title,
+      summary: enrichment.summary,
+      contentType: enrichment.contentType,
+      sourceName: enrichment.sourceName,
+      imageUrl: enrichment.imageUrl,
+      topicIds: mergedTopicIds,
+      enrichmentStatus: "enriched",
+    });
+  },
+});
+
+// HTTP API action — graceful degradation, always saves the item
 export const ingestItemInternal = internalAction({
   args: {
     userId: v.id("users"),

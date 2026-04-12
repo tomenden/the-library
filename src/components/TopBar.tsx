@@ -16,6 +16,13 @@ export default function TopBar({
 }: TopBarProps) {
   const [showAdd, setShowAdd] = useState(false);
   const [showAIAdd, setShowAIAdd] = useState(false);
+  const [manualUrl, setManualUrl] = useState("");
+
+  function handleSwitchToManual(url: string) {
+    setShowAIAdd(false);
+    setManualUrl(url);
+    setShowAdd(true);
+  }
 
   return (
     <>
@@ -82,8 +89,18 @@ export default function TopBar({
         </div>
       </header>
 
-      {showAdd && <AddContentModal onClose={() => setShowAdd(false)} />}
-      {showAIAdd && <SaveWithAIModal onClose={() => setShowAIAdd(false)} />}
+      {showAdd && (
+        <AddContentModal
+          onClose={() => { setShowAdd(false); setManualUrl(""); }}
+          initialUrl={manualUrl}
+        />
+      )}
+      {showAIAdd && (
+        <SaveWithAIModal
+          onClose={() => setShowAIAdd(false)}
+          onSwitchToManual={handleSwitchToManual}
+        />
+      )}
     </>
   );
 }

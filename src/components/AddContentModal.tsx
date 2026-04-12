@@ -5,6 +5,7 @@ import { Id } from "../../convex/_generated/dataModel";
 
 interface Props {
   onClose: () => void;
+  initialUrl?: string;
 }
 
 const CONTENT_TYPES = [
@@ -16,12 +17,12 @@ const CONTENT_TYPES = [
   { value: "tweet", label: "Tweet" },
 ] as const;
 
-export default function AddContentModal({ onClose }: Props) {
+export default function AddContentModal({ onClose, initialUrl = "" }: Props) {
   const createItem = useMutation(api.items.create);
   const createTopic = useMutation(api.topics.create);
   const allTopics = useQuery(api.topics.list, {});
 
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(initialUrl);
   const [title, setTitle] = useState("");
   const [contentType, setContentType] = useState("");
   const [selectedTopicIds, setSelectedTopicIds] = useState<Id<"topics">[]>([]);

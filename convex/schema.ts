@@ -25,6 +25,11 @@ export const statusValidator = v.union(
   v.literal("done"),
 );
 
+export const enrichmentStatusValidator = v.union(
+  v.literal("enriched"),
+  v.literal("failed"),
+);
+
 export default defineSchema({
   ...authTables,
 
@@ -40,6 +45,7 @@ export default defineSchema({
     notes: v.optional(v.string()),
     notesList: v.optional(v.array(v.string())),
     topicIds: v.array(v.id("topics")),
+    enrichmentStatus: v.optional(enrichmentStatusValidator),
     isFavorite: v.optional(v.boolean()),
     embedding: v.optional(v.array(v.float64())),
   })

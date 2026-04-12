@@ -42,6 +42,7 @@ An **item** represents one saved link.
 | `sourceName` | string? | Source platform, e.g. `"YouTube"`, `"Medium"` |
 | `imageUrl` | string? | Thumbnail URL |
 | `status` | enum | `saved` / `in_progress` / `done` — defaults to `saved` |
+| `enrichmentStatus` | enum? | `enriched` / `failed` — set when AI enrichment is attempted |
 | `isFavorite` | boolean? | Whether the item is starred as a favorite |
 | `notesList` | string[]? | List of private notes added by the user |
 | `topicIds` | string[] | IDs of associated topics |
@@ -92,7 +93,7 @@ Fetches the page at the given URL, uses AI to extract a title, summary, content 
 
 **Response:** `201 Created` — enriched item object (same shape as `POST /api/items` response).
 
-Falls back to saving with just the URL if the page cannot be fetched or enrichment fails.
+Falls back to saving with just the URL if the page cannot be fetched or enrichment fails. The `enrichmentStatus` field on the returned item will be `"enriched"` on success or `"failed"` on failure.
 
 ### GET /api/items — List items
 

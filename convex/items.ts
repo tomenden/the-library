@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Id } from "./_generated/dataModel";
-import { contentTypeValidator, statusValidator } from "./schema";
+import { contentTypeValidator, enrichmentStatusValidator, statusValidator } from "./schema";
 import { internal } from "./_generated/api";
 
 // ── Public (session auth) ──────────────────────────────────────────────────
@@ -130,6 +130,7 @@ export const createInternal = internalMutation({
     imageUrl: v.optional(v.string()),
     notesList: v.optional(v.array(v.string())),
     topicIds: v.array(v.id("topics")),
+    enrichmentStatus: v.optional(enrichmentStatusValidator),
   },
   handler: async (ctx, args) => createHandler(ctx, args),
 });
@@ -183,6 +184,26 @@ export const toggleFavoriteInternal = internalMutation({
     const item = await ctx.db.get(id);
     if (!item || item.userId !== userId) throw new Error("Not found");
     await ctx.db.patch(id, { isFavorite: !(item.isFavorite ?? false) });
+  },
+});
+
+export const updateEnrichment = internalMutation({
+  args: {
+    id: v.id("items"),
+    userId: v.id("users"),
+    title: v.optional(v.string()),
+    summary: v.optional(v.string()),
+    contentType: v.optional(contentTypeValidator),
+    sourceName: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    topicIds: v.array(v.id("topics")),
+    enrichmentStatus: enrichmentStatusValidator,
+  },
+  handler: async (ctx, { id, userId, ...fields }) => {
+    const item = await ctx.db.get(id);
+    if (!item || item.userId !== userId) throw new Error("Not found");
+    await ctx.db.patch(id, fields);
+    await ctx.scheduler.runAfter(0, internal.actions.embeddings.generateEmbedding, { itemId: id });
   },
 });
 

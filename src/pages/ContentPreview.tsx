@@ -14,12 +14,15 @@ export default function ContentPreview() {
 
   const [newNote, setNewNote] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isReEnriching, setIsReEnriching] = useState(false);
+  const [reEnrichError, setReEnrichError] = useState("");
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [newTagInput, setNewTagInput] = useState("");
   // Two refs so both mobile and desktop tag pickers get their own DOM node
   const tagPickerMobileRef = useRef<HTMLDivElement>(null);
   const tagPickerDesktopRef = useRef<HTMLDivElement>(null);
 
+  const reEnrich = useAction(api.actions.ingest.reEnrich);
   const toggleFavorite = useMutation(api.items.toggleFavorite);
   const addNote = useMutation(api.items.addNote);
   const deleteNote = useMutation(api.items.deleteNote);
@@ -37,6 +40,19 @@ export default function ContentPreview() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  async function handleReEnrich() {
+    if (!id || isReEnriching) return;
+    setIsReEnriching(true);
+    setReEnrichError("");
+    try {
+      await reEnrich({ id: id as Id<"items"> });
+    } catch (err) {
+      setReEnrichError(err instanceof Error ? err.message : "Enrichment failed");
+    } finally {
+      setIsReEnriching(false);
+    }
+  }
 
   async function handleMarkDone() {
     if (!item || !id) return;
@@ -196,6 +212,34 @@ export default function ContentPreview() {
     );
   }
 
+  const enrichmentFailed = item.enrichmentStatus === "failed";
+
+  const EnrichmentBanner = enrichmentFailed ? (
+    <div className="flex items-center gap-3 p-4 bg-surface-container rounded-xl border border-outline-variant/30">
+      <span className="material-symbols-outlined text-on-surface-variant">info</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-on-surface">
+          AI analysis didn't complete for this item.
+        </p>
+        {reEnrichError && (
+          <p className="text-xs text-error mt-1">{reEnrichError}</p>
+        )}
+      </div>
+      <button
+        onClick={handleReEnrich}
+        disabled={isReEnriching}
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-container text-on-primary-container rounded-lg
+                   text-[0.6875rem] font-bold uppercase tracking-wider whitespace-nowrap
+                   disabled:opacity-50 transition-opacity"
+      >
+        <span className={`material-symbols-outlined text-[16px] ${isReEnriching ? "animate-spin" : ""}`}>
+          {isReEnriching ? "progress_activity" : "auto_fix_high"}
+        </span>
+        {isReEnriching ? "Analysing…" : "Retry"}
+      </button>
+    </div>
+  ) : null;
+
   const NotesSection = (
     <div className="bg-surface-container-lowest rounded-xl p-5 editorial-shadow">
       <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant mb-3">Notes</p>
@@ -325,6 +369,8 @@ export default function ContentPreview() {
           </p>
         )}
 
+        {EnrichmentBanner && <div className="mt-4">{EnrichmentBanner}</div>}
+
         <a
           href={item.url}
           target="_blank"
@@ -425,6 +471,8 @@ export default function ContentPreview() {
           </article>
 
           <aside className="space-y-6">
+            {EnrichmentBanner}
+
             <a
               href={item.url}
               target="_blank"
