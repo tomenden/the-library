@@ -59,17 +59,18 @@ export default function SearchDiscovery() {
   const hasFilter = !!q.trim() || !!selectedTopicId;
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background overflow-x-hidden">
       <Sidebar />
-      <div className="md:ml-64 flex-1 flex flex-col">
+      {/* min-w-0 prevents flex child from overflowing its container */}
+      <div className="md:ml-64 flex-1 min-w-0 flex flex-col">
         <TopBar showSearch={false} showBrandName />
 
-        <main className="flex-1">
-          <section className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-12 pb-28 md:pb-24">
+        <main className="flex-1 min-w-0">
+          <section className="w-full max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-12 pb-28 md:pb-24">
 
             {/* Search bar */}
-            <div className="flex flex-col items-center text-center mb-8 md:mb-12">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline text-on-surface leading-tight mb-6 md:mb-8">
+            <div className="flex flex-col items-center text-center mb-6 md:mb-12">
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-headline text-on-surface leading-tight mb-5 md:mb-8">
                 Seek with <span className="italic font-light">Intent</span>
               </h1>
               <div className="relative w-full max-w-3xl">
@@ -77,12 +78,11 @@ export default function SearchDiscovery() {
                   search
                 </span>
                 <input
-                  className="w-full pl-12 md:pl-16 pr-4 md:pr-6 py-4 md:py-6 bg-surface-container-lowest border-none rounded-2xl text-base md:text-xl font-sans placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 editorial-shadow transition-all"
-                  placeholder={mode === "semantic" ? "Ask anything about your library…" : "Search your library..."}
+                  className="w-full pl-12 md:pl-16 pr-10 py-3.5 md:py-6 bg-surface-container-lowest border-none rounded-2xl text-base md:text-xl font-sans placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 editorial-shadow transition-all"
+                  placeholder={mode === "semantic" ? "Ask anything…" : "Search your library..."}
                   type="text"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  autoFocus
                 />
                 {q && (
                   <button
@@ -95,7 +95,7 @@ export default function SearchDiscovery() {
               </div>
 
               {/* Mode toggle */}
-              <div className="flex items-center gap-1 mt-4 bg-surface-container rounded-full p-1">
+              <div className="flex items-center gap-1 mt-3 md:mt-4 bg-surface-container rounded-full p-1">
                 <button
                   onClick={() => switchMode("keyword")}
                   className={[
@@ -124,7 +124,7 @@ export default function SearchDiscovery() {
 
             {/* Mobile: tag filter as horizontal scroll strip */}
             {mode === "keyword" && topics && topics.length > 0 && (
-              <div className="flex md:hidden gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
+              <div className="flex md:hidden gap-2 mb-5 overflow-x-auto pb-1 scrollbar-hide">
                 {topics.map((topic) => {
                   const active = selectedTopicId === topic._id;
                   return (
@@ -153,9 +153,9 @@ export default function SearchDiscovery() {
               </div>
             )}
 
-            {/* Desktop: sidebar layout */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-              {/* Left: Tag filter (desktop only, keyword mode) */}
+            {/* Desktop: sidebar + results layout */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
+              {/* Left: Tag filter (desktop only) */}
               <div className="hidden md:block md:col-span-3">
                 {mode === "keyword" && (
                   <>
@@ -163,7 +163,6 @@ export default function SearchDiscovery() {
                       <span className="material-symbols-outlined text-base">label</span>
                       Filter by Tag
                     </h3>
-
                     {topics === undefined && (
                       <p className="text-sm text-on-surface-variant/60">Loading…</p>
                     )}
@@ -204,7 +203,6 @@ export default function SearchDiscovery() {
                     )}
                   </>
                 )}
-
                 {mode === "semantic" && (
                   <div className="text-sm text-on-surface-variant/70 space-y-2">
                     <p className="flex items-start gap-2">
@@ -219,9 +217,9 @@ export default function SearchDiscovery() {
               </div>
 
               {/* Results */}
-              <div className="md:col-span-9">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-headline italic text-on-surface">
+              <div className="md:col-span-9 min-w-0">
+                <div className="flex items-center justify-between mb-5 md:mb-6">
+                  <h2 className="text-lg md:text-xl font-headline italic text-on-surface">
                     {mode === "semantic" && !q.trim() ? (
                       "Ask a question to explore your library"
                     ) : hasFilter ? (
@@ -245,7 +243,7 @@ export default function SearchDiscovery() {
                 </div>
 
                 {isLoading && q.trim() && (
-                  <div className="flex justify-center py-20">
+                  <div className="flex justify-center py-16">
                     <span className="material-symbols-outlined animate-spin text-on-surface-variant">
                       progress_activity
                     </span>
@@ -253,7 +251,7 @@ export default function SearchDiscovery() {
                 )}
 
                 {!isLoading && results !== null && results !== undefined && results.length === 0 && (
-                  <div className="text-center py-20">
+                  <div className="text-center py-16">
                     <p className="text-on-surface-variant text-sm">
                       {hasFilter ? "No items match." : "Your library is empty."}
                     </p>
@@ -277,12 +275,12 @@ export default function SearchDiscovery() {
                             />
                           </div>
                         )}
-                        <div className="p-4 md:p-5 flex flex-col flex-grow">
+                        <div className="p-4 flex flex-col flex-grow">
                           <div className="flex items-center justify-between mb-2">
-                            <p className="text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant/60">
+                            <p className="text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant/60 truncate mr-2">
                               {item.sourceName ?? ""}
                             </p>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-shrink-0">
                               {mode === "semantic" && item._score !== undefined && (
                                 <span
                                   className="text-[0.6rem] font-bold uppercase tracking-widest text-primary-container/70"

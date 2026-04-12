@@ -32,11 +32,11 @@ export default function TopBar({
           The Library
         </h1>
         <NavLink
-          to="/explore"
+          to="/settings"
           className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant"
-          aria-label="Search"
+          aria-label="Settings"
         >
-          <span className="material-symbols-outlined text-[22px]">search</span>
+          <span className="material-symbols-outlined text-[22px]">account_circle</span>
         </NavLink>
       </header>
 
