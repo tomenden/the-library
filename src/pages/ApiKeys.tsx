@@ -5,6 +5,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import BottomNav from "../components/BottomNav";
+import { useSidebar } from "../contexts/SidebarContext";
 
 export default function ApiKeys() {
   const keys = useQuery(api.apiKeys.list, {});
@@ -41,10 +42,12 @@ export default function ApiKeys() {
     await revokeKey({ id });
   }
 
+  const { collapsed } = useSidebar();
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <div className="md:ml-64 flex-1 flex flex-col">
+      <div className={`${collapsed ? 'md:ml-16' : 'md:ml-64'} flex-1 flex flex-col transition-all duration-300`}>
         <TopBar />
         <main className="px-4 md:px-8 pt-6 md:pt-8 pb-28 md:pb-8 max-w-2xl">
           <div className="mb-10">

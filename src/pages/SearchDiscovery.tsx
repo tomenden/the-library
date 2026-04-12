@@ -6,6 +6,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import BottomNav from "../components/BottomNav";
+import { useSidebar } from "../contexts/SidebarContext";
 
 type SearchMode = "keyword" | "semantic";
 
@@ -18,6 +19,7 @@ export default function SearchDiscovery() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
+  const { collapsed } = useSidebar();
   const topics = useQuery(api.topics.list, {});
   const keywordResults = useQuery(api.items.list, {
     q: mode === "keyword" ? (q.trim() || undefined) : undefined,
@@ -62,7 +64,7 @@ export default function SearchDiscovery() {
     <div className="flex min-h-screen bg-background overflow-x-hidden">
       <Sidebar />
       {/* min-w-0 prevents flex child from overflowing its container */}
-      <div className="md:ml-64 flex-1 min-w-0 flex flex-col">
+      <div className={`${collapsed ? 'md:ml-16' : 'md:ml-64'} flex-1 min-w-0 flex flex-col transition-all duration-300`}>
         <TopBar showSearch={false} showBrandName />
 
         <main className="flex-1 min-w-0">

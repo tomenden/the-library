@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { SidebarProvider } from "./contexts/SidebarContext";
 import AuthGate from "./components/AuthGate";
 import Login from "./pages/Login";
 import MainLibrary from "./pages/MainLibrary";
@@ -12,6 +13,7 @@ import FilteredItems from "./pages/FilteredItems";
 
 export default function App() {
   return (
+    <SidebarProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -43,5 +45,6 @@ export default function App() {
         />
       </Routes>
     </BrowserRouter>
+    </SidebarProvider>
   );
 }

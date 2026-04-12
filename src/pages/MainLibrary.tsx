@@ -5,6 +5,7 @@ import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import BottomNav from "../components/BottomNav";
 import ContentCard from "../components/ContentCard";
+import { useSidebar } from "../contexts/SidebarContext";
 
 const SKELETONS = Array.from({ length: 8 });
 
@@ -17,11 +18,12 @@ const filterTabs = [
 
 export default function MainLibrary() {
   const items = useQuery(api.items.list, {});
+  const { collapsed } = useSidebar();
 
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <div className="md:ml-64 flex-1 flex flex-col">
+      <div className={`${collapsed ? 'md:ml-16' : 'md:ml-64'} flex-1 flex flex-col transition-all duration-300`}>
         <TopBar />
         <main className="px-4 md:px-8 pt-6 md:pt-8 pb-28 md:pb-8 max-w-[1400px] mx-auto w-full">
           <div className="mb-8 md:mb-12">
