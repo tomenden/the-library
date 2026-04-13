@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "The Library",
+    "slug": "the-library",
+    "version": "1.0.0",
+    "scheme": "the-library",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "bundleIdentifier": "com.thelibrary.app",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.thelibrary.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "plugins": ["expo-router"]
+  }
+}

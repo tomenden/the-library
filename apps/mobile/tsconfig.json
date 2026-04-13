@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@convex/*": ["../../convex/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../../convex/**/*.ts"]
+}
