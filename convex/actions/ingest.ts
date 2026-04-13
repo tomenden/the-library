@@ -247,6 +247,26 @@ async function callOpenRouter(apiKey: string, prompt: string): Promise<string> {
 
 // ── Enrichment pipeline ───────────────────────────────────────────────────
 
+async function fetchHtmlContent(
+  url: string
+): Promise<{ content: string; imageUrl?: string }> {
+  const pageRes = await fetch(url, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (compatible; TheLibrary/1.0; +https://the-library-sigma.vercel.app)",
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!pageRes.ok) {
+    throw new Error(`Failed to fetch URL (${pageRes.status}): ${url}`);
+  }
+  const html = await pageRes.text();
+  return {
+    content: truncateHtml(cleanHtml(html), 15000),
+    imageUrl: extractImageUrl(html, url),
+  };
+}
+
 function buildEnrichmentPrompt(url: string, content: string, existingTopics: string[]): string {
   return (
     `You are a content metadata extractor. Given the text content of a webpage, extract the following as JSON:\n` +
@@ -272,36 +292,10 @@ async function enrichUrl(url: string, existingTopics: string[]): Promise<Enrichm
       imageUrl = twitter.imageUrl;
     } catch (e) {
       console.error("FxTwitter fetch failed, falling back to direct fetch:", e);
-      // Fall through to standard HTML fetch
-      const pageRes = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (compatible; TheLibrary/1.0; +https://the-library-sigma.vercel.app)",
-        },
-        signal: AbortSignal.timeout(15000),
-      });
-      if (!pageRes.ok) {
-        throw new Error(`Failed to fetch URL (${pageRes.status}): ${url}`);
-      }
-      const html = await pageRes.text();
-      imageUrl = extractImageUrl(html, url);
-      content = truncateHtml(cleanHtml(html), 15000);
+      ({ content, imageUrl } = await fetchHtmlContent(url));
     }
   } else {
-    // Standard path for non-Twitter URLs
-    const pageRes = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; TheLibrary/1.0; +https://the-library-sigma.vercel.app)",
-      },
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!pageRes.ok) {
-      throw new Error(`Failed to fetch URL (${pageRes.status}): ${url}`);
-    }
-    const html = await pageRes.text();
-    imageUrl = extractImageUrl(html, url);
-    content = truncateHtml(cleanHtml(html), 15000);
+    ({ content, imageUrl } = await fetchHtmlContent(url));
   }
 
   const prompt = buildEnrichmentPrompt(url, content, existingTopics);
