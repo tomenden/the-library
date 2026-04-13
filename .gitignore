@@ -1,6 +1,6 @@
 .worktrees/
 .env.local
-convex/_generated/ai/
+convex/_generated/
 .superpowers/
 dist/
 node_modules/
