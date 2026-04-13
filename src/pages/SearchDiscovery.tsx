@@ -6,7 +6,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import BottomNav from "../components/BottomNav";
-import { useSidebar } from "../contexts/SidebarContext";
+import { SKIP_AUTH, MOCK_ITEMS, MOCK_TOPICS } from "../lib/devMocks";
 
 type SearchMode = "keyword" | "semantic";
 
@@ -19,12 +19,20 @@ export default function SearchDiscovery() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
-  const { collapsed } = useSidebar();
-  const topics = useQuery(api.topics.list, {});
-  const keywordResults = useQuery(api.items.list, {
+  const rawTopics = useQuery(api.topics.list, SKIP_AUTH ? "skip" : {});
+  const rawKeywordResults = useQuery(api.items.list, SKIP_AUTH ? "skip" : {
     q: mode === "keyword" ? (q.trim() || undefined) : undefined,
     topicId: selectedTopicId,
   });
+  const topics = SKIP_AUTH ? MOCK_TOPICS : rawTopics;
+  const keywordResults = SKIP_AUTH
+    ? MOCK_ITEMS.filter((item) => {
+        const lower = q.trim().toLowerCase();
+        if (lower && !item.title?.toLowerCase().includes(lower) && !item.summary?.toLowerCase().includes(lower)) return false;
+        if (selectedTopicId && !item.topicIds.includes(selectedTopicId)) return false;
+        return true;
+      })
+    : rawKeywordResults;
 
   const runSemanticSearch = useAction(api.search.semanticSearch);
 
@@ -64,8 +72,8 @@ export default function SearchDiscovery() {
     <div className="flex min-h-screen bg-background overflow-x-hidden">
       <Sidebar />
       {/* min-w-0 prevents flex child from overflowing its container */}
-      <div className={`${collapsed ? 'md:ml-16' : 'md:ml-64'} flex-1 min-w-0 flex flex-col transition-all duration-300`}>
-        <TopBar showSearch={false} showBrandName />
+      <div className="md:ml-48 flex-1 min-w-0 flex flex-col transition-all duration-300">
+        <TopBar />
 
         <main className="flex-1 min-w-0">
           <section className="w-full max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-12 pb-28 md:pb-24">

@@ -5,7 +5,6 @@ import ContentCard from "../components/ContentCard";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import BottomNav from "../components/BottomNav";
-import { useSidebar } from "../contexts/SidebarContext";
 
 type ContentType = "article" | "video" | "podcast" | "tweet" | "newsletter";
 type Status = "saved" | "in_progress" | "done";
@@ -23,12 +22,11 @@ interface FilteredItemsProps {
 export default function FilteredItems({ title, subtitle, filter }: FilteredItemsProps) {
   const navigate = useNavigate();
   const items = useQuery(api.items.list, filter);
-  const { collapsed } = useSidebar();
 
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <div className={`${collapsed ? 'md:ml-16' : 'md:ml-64'} flex-1 flex flex-col transition-all duration-300`}>
+      <div className="md:ml-48 flex-1 flex flex-col transition-all duration-300">
         <TopBar />
         <main className="px-4 md:px-8 pt-6 md:pt-8 pb-28 md:pb-8">
           <div className="mb-8">

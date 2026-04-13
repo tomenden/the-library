@@ -5,12 +5,15 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import TagChip from "../components/TagChip";
 import BottomNav from "../components/BottomNav";
+import { SKIP_AUTH, getMockItem, MOCK_TOPICS } from "../lib/devMocks";
 
 export default function ContentPreview() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const item = useQuery(api.items.get, id ? { id: id as Id<"items"> } : "skip");
-  const allTopics = useQuery(api.topics.list, {});
+  const rawItem = useQuery(api.items.get, SKIP_AUTH ? "skip" : id ? { id: id as Id<"items"> } : "skip");
+  const rawTopics = useQuery(api.topics.list, SKIP_AUTH ? "skip" : {});
+  const item = SKIP_AUTH ? getMockItem(id ?? "") : rawItem;
+  const allTopics = SKIP_AUTH ? MOCK_TOPICS : rawTopics;
 
   const [newNote, setNewNote] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);

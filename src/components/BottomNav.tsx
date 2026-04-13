@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 const tabs = [
   { icon: 'auto_stories', label: 'Library', to: '/' },
   { icon: 'search', label: 'Explore', to: '/explore' },
-  { icon: 'mark_as_unread', label: 'Unread', to: '/unread' },
+  { icon: 'settings', label: 'Settings', to: '/settings' },
 ];
 
 export default function BottomNav() {
