@@ -128,6 +128,32 @@ export function extractTwitterImageUrl(data: any): string | undefined {
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+async function fetchTwitterContent(
+  url: string
+): Promise<{ text: string; imageUrl?: string }> {
+  // Extract path: /{user}/{status|article}/{id} → normalize to /{user}/status/{id}
+  const parsed = new URL(url);
+  const match = parsed.pathname.match(/^\/(\w+)\/(?:status|article)\/(\d+)/);
+  if (!match) {
+    throw new Error(`Could not parse Twitter URL path: ${parsed.pathname}`);
+  }
+  const [, user, id] = match;
+  const apiUrl = `https://api.fxtwitter.com/${user}/status/${id}`;
+
+  const res = await fetch(apiUrl, {
+    headers: { "User-Agent": "TheLibrary/1.0" },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) {
+    throw new Error(`FxTwitter API error (${res.status}): ${apiUrl}`);
+  }
+
+  const data = await res.json();
+  const text = composeTwitterText(data);
+  const imageUrl = extractTwitterImageUrl(data);
+  return { text, imageUrl };
+}
+
 export function extractImageUrl(html: string, baseUrl: string): string | undefined {
   const ogMatch = metaContent(html, "property", "og:image");
   if (ogMatch?.[1]) return new URL(ogMatch[1], baseUrl).href;
@@ -235,23 +261,52 @@ function buildEnrichmentPrompt(url: string, content: string, existingTopics: str
 }
 
 async function enrichUrl(url: string, existingTopics: string[]): Promise<EnrichmentData> {
-  // 1. Fetch page content (shared across providers)
-  const pageRes = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (compatible; TheLibrary/1.0; +https://the-library-sigma.vercel.app)",
-    },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!pageRes.ok) {
-    throw new Error(`Failed to fetch URL (${pageRes.status}): ${url}`);
+  let content: string;
+  let imageUrl: string | undefined;
+
+  if (isTwitterUrl(url)) {
+    // Twitter/X blocks server-side fetches; use FxTwitter API instead
+    try {
+      const twitter = await fetchTwitterContent(url);
+      content = truncateHtml(twitter.text, 15000);
+      imageUrl = twitter.imageUrl;
+    } catch (e) {
+      console.error("FxTwitter fetch failed, falling back to direct fetch:", e);
+      // Fall through to standard HTML fetch
+      const pageRes = await fetch(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (compatible; TheLibrary/1.0; +https://the-library-sigma.vercel.app)",
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!pageRes.ok) {
+        throw new Error(`Failed to fetch URL (${pageRes.status}): ${url}`);
+      }
+      const html = await pageRes.text();
+      imageUrl = extractImageUrl(html, url);
+      content = truncateHtml(cleanHtml(html), 15000);
+    }
+  } else {
+    // Standard path for non-Twitter URLs
+    const pageRes = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; TheLibrary/1.0; +https://the-library-sigma.vercel.app)",
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!pageRes.ok) {
+      throw new Error(`Failed to fetch URL (${pageRes.status}): ${url}`);
+    }
+    const html = await pageRes.text();
+    imageUrl = extractImageUrl(html, url);
+    content = truncateHtml(cleanHtml(html), 15000);
   }
-  const html = await pageRes.text();
-  const imageUrl = extractImageUrl(html, url);
-  const content = truncateHtml(cleanHtml(html), 15000);
+
   const prompt = buildEnrichmentPrompt(url, content, existingTopics);
 
-  // 2. Try Gemini first, then OpenRouter fallback
+  // Try Gemini first, then OpenRouter fallback
   let responseText: string | undefined;
 
   const geminiKey = process.env.GEMINI_API_KEY;
