@@ -2,6 +2,7 @@
   "name": "the-library",
   "private": true,
   "version": "0.0.1",
+  "workspaces": ["apps/*"],
   "type": "module",
   "scripts": {
     "dev": "vite",
