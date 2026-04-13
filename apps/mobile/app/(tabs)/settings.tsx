@@ -2,11 +2,14 @@ import { View, Text, Pressable, Alert } from 'react-native';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { LogOut, Key, User } from 'lucide-react-native';
+import { LogOut, Key, User, Tag } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
   const { signOut } = useAuthActions();
+  const router = useRouter();
   const apiKeys = useQuery(api.apiKeys.list);
+  const topics = useQuery(api.topics.list);
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure?', [
@@ -33,6 +36,17 @@ export default function SettingsScreen() {
             <Text className="text-sm text-gray-500">Signed in with Google</Text>
           </View>
         </View>
+
+        <Pressable
+          className="flex-row items-center p-4 border-b border-gray-100"
+          onPress={() => router.push('/topics')}
+        >
+          <Tag size={20} color="#49454F" />
+          <Text className="ml-3 text-base text-gray-900">Manage Topics</Text>
+          <Text className="ml-auto text-sm text-gray-400">
+            {topics?.length ?? 0} topics
+          </Text>
+        </Pressable>
 
         <Pressable className="flex-row items-center p-4 border-b border-gray-100">
           <Key size={20} color="#49454F" />

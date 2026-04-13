@@ -37,6 +37,17 @@ export const rename = mutation({
   },
 });
 
+export const update = mutation({
+  args: { id: v.id("topics"), name: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const topic = await ctx.db.get(args.id);
+    if (!topic || topic.userId !== userId) throw new Error("Topic not found");
+    await ctx.db.patch(args.id, { name: args.name });
+  },
+});
+
 export const remove = mutation({
   args: { id: v.id("topics") },
   handler: async (ctx, { id }) => {
