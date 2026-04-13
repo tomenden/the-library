@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { expect, test } from "vitest";
-import { truncateHtml, cleanHtml, parseEnrichmentResponse, extractImageUrl, isTwitterUrl, composeTwitterText } from "./ingest";
+import { truncateHtml, cleanHtml, parseEnrichmentResponse, extractImageUrl, isTwitterUrl, composeTwitterText, extractTwitterImageUrl } from "./ingest";
 
 // truncateHtml
 
@@ -170,6 +170,47 @@ test("composeTwitterText: handles missing author gracefully", () => {
   };
   const result = composeTwitterText(data);
   expect(result).toContain("Hello world");
+});
+
+// extractTwitterImageUrl
+
+test("extractTwitterImageUrl: prefers article cover image", () => {
+  const data = {
+    tweet: {
+      author: { avatar_url: "https://pbs.twimg.com/avatar.jpg" },
+      media: { photos: [{ url: "https://pbs.twimg.com/media/photo.jpg" }] },
+      article: {
+        cover_media: {
+          media_info: { original_img_url: "https://pbs.twimg.com/media/cover.jpg" },
+        },
+      },
+    },
+  };
+  expect(extractTwitterImageUrl(data)).toBe("https://pbs.twimg.com/media/cover.jpg");
+});
+
+test("extractTwitterImageUrl: falls back to tweet media photo", () => {
+  const data = {
+    tweet: {
+      author: { avatar_url: "https://pbs.twimg.com/avatar.jpg" },
+      media: { photos: [{ url: "https://pbs.twimg.com/media/photo.jpg" }] },
+    },
+  };
+  expect(extractTwitterImageUrl(data)).toBe("https://pbs.twimg.com/media/photo.jpg");
+});
+
+test("extractTwitterImageUrl: falls back to author avatar", () => {
+  const data = {
+    tweet: {
+      author: { avatar_url: "https://pbs.twimg.com/avatar.jpg" },
+    },
+  };
+  expect(extractTwitterImageUrl(data)).toBe("https://pbs.twimg.com/avatar.jpg");
+});
+
+test("extractTwitterImageUrl: returns undefined when no images", () => {
+  expect(extractTwitterImageUrl({ tweet: {} })).toBeUndefined();
+  expect(extractTwitterImageUrl({})).toBeUndefined();
 });
 
 // extractImageUrl

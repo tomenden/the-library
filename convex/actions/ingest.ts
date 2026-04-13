@@ -110,6 +110,24 @@ export function composeTwitterText(data: any): string {
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export function extractTwitterImageUrl(data: any): string | undefined {
+  const tweet = data?.tweet;
+  if (!tweet) return undefined;
+
+  // Priority 1: article cover image
+  const coverUrl = tweet.article?.cover_media?.media_info?.original_img_url;
+  if (coverUrl) return coverUrl;
+
+  // Priority 2: first tweet media photo
+  const photoUrl = tweet.media?.photos?.[0]?.url;
+  if (photoUrl) return photoUrl;
+
+  // Priority 3: author avatar
+  return tweet.author?.avatar_url;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 export function extractImageUrl(html: string, baseUrl: string): string | undefined {
   const ogMatch = metaContent(html, "property", "og:image");
   if (ogMatch?.[1]) return new URL(ogMatch[1], baseUrl).href;
