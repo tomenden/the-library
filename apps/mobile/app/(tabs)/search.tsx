@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable } from 'react-native';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { ItemCard } from '../../components/ItemCard';

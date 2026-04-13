@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, FlatList, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, FlatList, Alert, Modal } from 'react-native';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useRouter } from 'expo-router';
@@ -10,9 +10,11 @@ export default function TopicManagerScreen() {
   const router = useRouter();
   const topics = useQuery(api.topics.list);
   const createTopic = useMutation(api.topics.create);
-  const updateTopic = useMutation(api.topics.update);
+  const renameTopic = useMutation(api.topics.rename);
   const deleteTopic = useMutation(api.topics.remove);
   const [newName, setNewName] = useState('');
+  const [renaming, setRenaming] = useState<{ id: Id<'topics'>; name: string } | null>(null);
+  const [renameText, setRenameText] = useState('');
 
   const handleCreate = async () => {
     const trimmed = newName.trim();
@@ -32,16 +34,16 @@ export default function TopicManagerScreen() {
     ]);
   };
 
-  const handleRename = (id: Id<'topics'>, currentName: string) => {
-    Alert.prompt('Rename Topic', `New name for "${currentName}":`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Rename',
-        onPress: (newName) => {
-          if (newName?.trim()) updateTopic({ id, name: newName.trim() });
-        },
-      },
-    ], 'plain-text', currentName);
+  const startRename = (id: Id<'topics'>, currentName: string) => {
+    setRenaming({ id, name: currentName });
+    setRenameText(currentName);
+  };
+
+  const confirmRename = () => {
+    if (renaming && renameText.trim()) {
+      renameTopic({ id: renaming.id, name: renameText.trim() });
+    }
+    setRenaming(null);
   };
 
   return (
@@ -77,7 +79,7 @@ export default function TopicManagerScreen() {
         renderItem={({ item: topic }) => (
           <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-50">
             <Text className="flex-1 text-base text-gray-900">{topic.name}</Text>
-            <Pressable onPress={() => handleRename(topic._id, topic.name)} className="p-2">
+            <Pressable onPress={() => startRename(topic._id, topic.name)} className="p-2">
               <Edit3 size={18} color="#666" />
             </Pressable>
             <Pressable onPress={() => handleDelete(topic._id, topic.name)} className="p-2">
@@ -89,6 +91,37 @@ export default function TopicManagerScreen() {
           <Text className="text-center text-gray-400 mt-8">No topics yet</Text>
         }
       />
+
+      {/* Rename modal — cross-platform (Alert.prompt is iOS-only) */}
+      <Modal visible={!!renaming} transparent animationType="fade">
+        <Pressable
+          className="flex-1 bg-black/40 justify-center items-center px-8"
+          onPress={() => setRenaming(null)}
+        >
+          <Pressable className="bg-white rounded-xl p-5 w-full" onPress={() => {}}>
+            <Text className="text-lg font-semibold text-gray-900 mb-3">Rename Topic</Text>
+            <TextInput
+              className="bg-gray-50 rounded-lg px-3 py-2 text-base mb-4 border border-gray-200"
+              value={renameText}
+              onChangeText={setRenameText}
+              autoFocus
+              onSubmitEditing={confirmRename}
+              returnKeyType="done"
+            />
+            <View className="flex-row justify-end gap-3">
+              <Pressable onPress={() => setRenaming(null)} className="px-4 py-2">
+                <Text className="text-gray-500">Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={confirmRename}
+                className="bg-purple-600 px-4 py-2 rounded-lg"
+              >
+                <Text className="text-white font-medium">Rename</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }

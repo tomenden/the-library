@@ -1,13 +1,15 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useGoogleAuth, saveToken } from '../lib/auth';
+import { useGoogleAuth } from '../lib/auth';
 import { useEffect } from 'react';
 import { useConvexAuth } from 'convex/react';
+import { useAuthActions } from '@convex-dev/auth/react';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { request, response, promptAsync } = useGoogleAuth();
   const { isAuthenticated } = useConvexAuth();
+  const { signIn } = useAuthActions();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -19,7 +21,8 @@ export default function LoginScreen() {
     if (response?.type === 'success') {
       const { id_token } = response.params;
       if (id_token) {
-        saveToken(id_token);
+        // Exchange Google token with Convex Auth
+        signIn("google", { token: id_token });
       }
     }
   }, [response]);

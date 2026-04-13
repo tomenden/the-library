@@ -24,6 +24,7 @@ export default function ItemDetailScreen() {
   const router = useRouter();
   const item = useQuery(api.items.get, { id: id as Id<'items'> });
   const updateItem = useMutation(api.items.update);
+  const toggleFav = useMutation(api.items.toggleFavorite);
   const deleteItem = useMutation(api.items.remove);
   const topics = useQuery(api.topics.list);
 
@@ -36,7 +37,7 @@ export default function ItemDetailScreen() {
   }
 
   const toggleFavorite = () => {
-    updateItem({ id: item._id, isFavorite: !item.isFavorite });
+    toggleFav({ id: item._id });
   };
 
   const cycleStatus = () => {

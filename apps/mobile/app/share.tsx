@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { View, Text, Pressable, ActivityIndicator, Alert } from 'react-native';
-import { useShareIntent } from 'expo-share-intent';
+import { useShareIntentContext } from 'expo-share-intent';
 import { useMutation } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useRouter } from 'expo-router';
 import { Link2, Check } from 'lucide-react-native';
 
 export default function ShareScreen() {
-  const { shareIntent, resetShareIntent } = useShareIntent();
+  const { shareIntent, resetShareIntent } = useShareIntentContext();
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const createItem = useMutation(api.items.create);
