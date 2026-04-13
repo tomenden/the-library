@@ -2,7 +2,9 @@
   "name": "the-library",
   "private": true,
   "version": "0.0.1",
-  "workspaces": ["apps/*"],
+  "workspaces": [
+    "apps/*"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,6 +26,7 @@
     "react-router-dom": "^7.4.0"
   },
   "devDependencies": {
+    "react-test-renderer": "^19.2.4",
     "@edge-runtime/vm": "^5.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
