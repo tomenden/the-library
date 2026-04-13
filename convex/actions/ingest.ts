@@ -65,6 +65,17 @@ function metaContent(html: string, attr: string, val: string): RegExpMatchArray 
     ?? html.match(new RegExp(`<meta\\s[^>]*content=["']([^"']+)["'][^>]*${attr}=["']${val}["']`, "i"));
 }
 
+const TWITTER_HOSTS = new Set(["twitter.com", "x.com"]);
+
+export function isTwitterUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    return TWITTER_HOSTS.has(host);
+  } catch {
+    return false;
+  }
+}
+
 export function extractImageUrl(html: string, baseUrl: string): string | undefined {
   const ogMatch = metaContent(html, "property", "og:image");
   if (ogMatch?.[1]) return new URL(ogMatch[1], baseUrl).href;

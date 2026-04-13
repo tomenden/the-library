@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { expect, test } from "vitest";
-import { truncateHtml, cleanHtml, parseEnrichmentResponse, extractImageUrl } from "./ingest";
+import { truncateHtml, cleanHtml, parseEnrichmentResponse, extractImageUrl, isTwitterUrl } from "./ingest";
 
 // truncateHtml
 
@@ -81,6 +81,33 @@ test("parseEnrichmentResponse: filters non-string topicNames", () => {
 test("parseEnrichmentResponse: treats null sourceName as undefined", () => {
   const input = JSON.stringify({ sourceName: null, topicNames: [] });
   expect(parseEnrichmentResponse(input).sourceName).toBeUndefined();
+});
+
+// isTwitterUrl
+
+test("isTwitterUrl: recognizes x.com", () => {
+  expect(isTwitterUrl("https://x.com/user/status/123")).toBe(true);
+});
+
+test("isTwitterUrl: recognizes twitter.com", () => {
+  expect(isTwitterUrl("https://twitter.com/user/status/123")).toBe(true);
+});
+
+test("isTwitterUrl: recognizes www.x.com", () => {
+  expect(isTwitterUrl("https://www.x.com/user/status/123")).toBe(true);
+});
+
+test("isTwitterUrl: recognizes www.twitter.com", () => {
+  expect(isTwitterUrl("https://www.twitter.com/user/status/123")).toBe(true);
+});
+
+test("isTwitterUrl: rejects other domains", () => {
+  expect(isTwitterUrl("https://example.com/status/123")).toBe(false);
+  expect(isTwitterUrl("https://nottwitter.com/status/123")).toBe(false);
+});
+
+test("isTwitterUrl: recognizes article URLs", () => {
+  expect(isTwitterUrl("https://x.com/user/article/123")).toBe(true);
 });
 
 // extractImageUrl
