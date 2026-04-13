@@ -1,3 +1,4 @@
+import '../global.css';
 import 'react-native-get-random-values';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { ConvexAuthProvider } from '@convex-dev/auth/react';
