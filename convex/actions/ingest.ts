@@ -85,7 +85,6 @@ export function composeTwitterText(data: any): string {
   const handle = tweet.author?.screen_name ?? "";
   const byline = name ? `${name}${handle ? ` (@${handle})` : ""}` : handle ? `@${handle}` : "";
 
-  // Article tweets: use article title + body
   if (tweet.article) {
     const title = tweet.article.title ?? "";
     const blocks: any[] = tweet.article.content?.blocks ?? [];
@@ -101,29 +100,23 @@ export function composeTwitterText(data: any): string {
     return `${header}\n\n${body}`.trim();
   }
 
-  // Regular tweets
   const text = tweet.text ?? "";
   if (byline) {
     return `Tweet by ${byline}:\n\n${text}`;
   }
   return text;
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export function extractTwitterImageUrl(data: any): string | undefined {
   const tweet = data?.tweet;
   if (!tweet) return undefined;
 
-  // Priority 1: article cover image
   const coverUrl = tweet.article?.cover_media?.media_info?.original_img_url;
   if (coverUrl) return coverUrl;
 
-  // Priority 2: first tweet media photo
   const photoUrl = tweet.media?.photos?.[0]?.url;
   if (photoUrl) return photoUrl;
 
-  // Priority 3: author avatar
   return tweet.author?.avatar_url;
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -154,7 +147,7 @@ async function fetchTwitterContent(
     throw new Error("FxTwitter returned no usable text content");
   }
   const imageUrl = extractTwitterImageUrl(data);
-  return { text, imageUrl };
+  return { text: truncateHtml(text, 15000), imageUrl };
 }
 
 export function extractImageUrl(html: string, baseUrl: string): string | undefined {
@@ -291,7 +284,7 @@ async function enrichUrl(url: string, existingTopics: string[]): Promise<Enrichm
     // Twitter/X blocks server-side fetches; use FxTwitter API instead
     try {
       const twitter = await fetchTwitterContent(url);
-      content = truncateHtml(twitter.text, 15000);
+      content = twitter.text;
       imageUrl = twitter.imageUrl;
     } catch (e) {
       console.error("FxTwitter fetch failed, falling back to direct fetch:", e);
