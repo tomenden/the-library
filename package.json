@@ -14,7 +14,10 @@
     "preview": "vite preview",
     "validate": "node scripts/validate.mjs",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "mobile": "npm run start -w apps/mobile",
+    "mobile:ios": "npm run ios -w apps/mobile",
+    "mobile:test": "npm test -w apps/mobile"
   },
   "dependencies": {
     "@auth/core": "^0.37.4",
