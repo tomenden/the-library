@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { expect, test } from "vitest";
-import { truncateHtml, cleanHtml, parseEnrichmentResponse, extractImageUrl, isTwitterUrl } from "./ingest";
+import { truncateHtml, cleanHtml, parseEnrichmentResponse, extractImageUrl, isTwitterUrl, composeTwitterText } from "./ingest";
 
 // truncateHtml
 
@@ -108,6 +108,68 @@ test("isTwitterUrl: rejects other domains", () => {
 
 test("isTwitterUrl: recognizes article URLs", () => {
   expect(isTwitterUrl("https://x.com/user/article/123")).toBe(true);
+});
+
+// composeTwitterText
+
+test("composeTwitterText: composes text for a regular tweet", () => {
+  const data = {
+    tweet: {
+      text: "This is a great thread about AI",
+      author: { name: "John", screen_name: "john_ai" },
+    },
+  };
+  const result = composeTwitterText(data);
+  expect(result).toBe("Tweet by John (@john_ai):\n\nThis is a great thread about AI");
+});
+
+test("composeTwitterText: composes text for an article with content blocks", () => {
+  const data = {
+    tweet: {
+      text: "",
+      author: { name: "AVB", screen_name: "neural_avb" },
+      article: {
+        title: "Neural Computers, Explained",
+        preview_text: "This new Meta AI paper trains a neural network.",
+        content: {
+          blocks: [
+            { text: "First paragraph.", type: "unstyled" },
+            { text: "Second paragraph.", type: "unstyled" },
+          ],
+        },
+      },
+    },
+  };
+  const result = composeTwitterText(data);
+  expect(result).toContain('Article by AVB (@neural_avb): "Neural Computers, Explained"');
+  expect(result).toContain("First paragraph.");
+  expect(result).toContain("Second paragraph.");
+});
+
+test("composeTwitterText: uses preview_text when no content blocks", () => {
+  const data = {
+    tweet: {
+      text: "",
+      author: { name: "AVB", screen_name: "neural_avb" },
+      article: {
+        title: "Some Article",
+        preview_text: "A preview of the article content.",
+      },
+    },
+  };
+  const result = composeTwitterText(data);
+  expect(result).toContain('"Some Article"');
+  expect(result).toContain("A preview of the article content.");
+});
+
+test("composeTwitterText: handles missing author gracefully", () => {
+  const data = {
+    tweet: {
+      text: "Hello world",
+    },
+  };
+  const result = composeTwitterText(data);
+  expect(result).toContain("Hello world");
 });
 
 // extractImageUrl

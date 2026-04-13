@@ -76,6 +76,40 @@ export function isTwitterUrl(url: string): boolean {
   }
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export function composeTwitterText(data: any): string {
+  const tweet = data?.tweet;
+  if (!tweet) return "";
+
+  const name = tweet.author?.name ?? "";
+  const handle = tweet.author?.screen_name ?? "";
+  const byline = name ? `${name}${handle ? ` (@${handle})` : ""}` : handle ? `@${handle}` : "";
+
+  // Article tweets: use article title + body
+  if (tweet.article) {
+    const title = tweet.article.title ?? "";
+    const blocks: any[] = tweet.article.content?.blocks ?? [];
+    const bodyText = blocks
+      .filter((b: any) => typeof b.text === "string" && b.text.trim())
+      .map((b: any) => b.text.trim())
+      .join("\n\n");
+    const body = bodyText || tweet.article.preview_text || "";
+
+    const header = byline
+      ? `Article by ${byline}: "${title}"`
+      : `Article: "${title}"`;
+    return `${header}\n\n${body}`.trim();
+  }
+
+  // Regular tweets
+  const text = tweet.text ?? "";
+  if (byline) {
+    return `Tweet by ${byline}:\n\n${text}`;
+  }
+  return text;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 export function extractImageUrl(html: string, baseUrl: string): string | undefined {
   const ogMatch = metaContent(html, "property", "og:image");
   if (ogMatch?.[1]) return new URL(ogMatch[1], baseUrl).href;
