@@ -16,6 +16,7 @@
     "expo-crypto": "~15.0.8",
     "expo-router": "^55.0.12",
     "expo-secure-store": "~15.0.8",
+    "expo-share-intent": "5.1.1",
     "expo-status-bar": "~3.0.9",
     "expo-web-browser": "~15.0.10",
     "lucide-react-native": "^1.8.0",

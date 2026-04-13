@@ -6,6 +6,20 @@ import { useConvexAuth } from 'convex/react';
 import { convex } from '../lib/convex';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
+
+function ShareIntentHandler() {
+  const { hasShareIntent } = useShareIntentContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (hasShareIntent) {
+      router.replace('/share');
+    }
+  }, [hasShareIntent]);
+
+  return null;
+}
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -30,22 +44,29 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ConvexAuthProvider client={convex}>
-        <AuthGate>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="login" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="item/[id]"
-              options={{ headerShown: true, title: 'Item', presentation: 'card' }}
-            />
-            <Stack.Screen
-              name="topics"
-              options={{ headerShown: false, presentation: 'card' }}
-            />
-          </Stack>
-        </AuthGate>
-      </ConvexAuthProvider>
+      <ShareIntentProvider>
+        <ConvexAuthProvider client={convex}>
+          <AuthGate>
+            <ShareIntentHandler />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="login" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen
+                name="item/[id]"
+                options={{ headerShown: true, title: 'Item', presentation: 'card' }}
+              />
+              <Stack.Screen
+                name="topics"
+                options={{ headerShown: false, presentation: 'card' }}
+              />
+              <Stack.Screen
+                name="share"
+                options={{ presentation: 'modal', headerShown: false }}
+              />
+            </Stack>
+          </AuthGate>
+        </ConvexAuthProvider>
+      </ShareIntentProvider>
     </GestureHandlerRootView>
   );
 }
