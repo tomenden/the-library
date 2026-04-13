@@ -150,6 +150,9 @@ async function fetchTwitterContent(
 
   const data = await res.json();
   const text = composeTwitterText(data);
+  if (!text) {
+    throw new Error("FxTwitter returned no usable text content");
+  }
   const imageUrl = extractTwitterImageUrl(data);
   return { text, imageUrl };
 }
