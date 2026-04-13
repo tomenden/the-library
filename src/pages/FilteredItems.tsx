@@ -1,6 +1,7 @@
 import { useQuery } from "convex/react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
+import { Doc } from "../../convex/_generated/dataModel";
 import ContentCard from "../components/ContentCard";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
@@ -55,7 +56,7 @@ export default function FilteredItems({ title, subtitle, filter }: FilteredItems
 
           {items && items.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              {items.map((item) => (
+              {items.map((item: Doc<"items">) => (
                 <ContentCard
                   key={item._id}
                   item={{

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
+import { Doc, Id } from "../../convex/_generated/dataModel";
 
 interface Props {
   onClose: () => void;
@@ -135,7 +135,7 @@ export default function AddContentModal({ onClose, initialUrl = "" }: Props) {
 
             {allTopics && allTopics.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-2">
-                {allTopics.map((t) => {
+                {allTopics.map((t: Doc<"topics">) => {
                   const active = selectedTopicIds.includes(t._id);
                   return (
                     <button

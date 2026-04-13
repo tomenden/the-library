@@ -2,13 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
+import { Doc, Id } from "../../convex/_generated/dataModel";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import BottomNav from "../components/BottomNav";
 import { SKIP_AUTH, MOCK_ITEMS, MOCK_TOPICS } from "../lib/devMocks";
 
 type SearchMode = "keyword" | "semantic";
+type SearchResultItem = Doc<"items"> & { _score?: number };
 
 export default function SearchDiscovery() {
   const [q, setQ] = useState("");
@@ -61,7 +62,7 @@ export default function SearchDiscovery() {
   }
 
   function toggleTopic(id: Id<"topics">) {
-    setSelectedTopicId((prev) => (prev === id ? undefined : id));
+    setSelectedTopicId((prev: Id<"topics"> | undefined) => (prev === id ? undefined : id));
   }
 
   const results = mode === "semantic" ? semanticResults : keywordResults;
@@ -135,7 +136,7 @@ export default function SearchDiscovery() {
             {/* Mobile: tag filter as horizontal scroll strip */}
             {mode === "keyword" && topics && topics.length > 0 && (
               <div className="flex md:hidden gap-2 mb-5 overflow-x-auto pb-1 scrollbar-hide">
-                {topics.map((topic) => {
+                {topics.map((topic: Doc<"topics">) => {
                   const active = selectedTopicId === topic._id;
                   return (
                     <button
@@ -181,7 +182,7 @@ export default function SearchDiscovery() {
                     )}
                     {topics && topics.length > 0 && (
                       <div className="flex flex-col gap-1">
-                        {topics.map((topic) => {
+                        {topics.map((topic: Doc<"topics">) => {
                           const active = selectedTopicId === topic._id;
                           return (
                             <button
@@ -237,7 +238,7 @@ export default function SearchDiscovery() {
                         {isLoading ? "…" : results?.length ?? "…"} result{(!isLoading && results?.length !== 1) ? "s" : ""}
                         {mode === "keyword" && selectedTopicId && topics && (
                           <span className="text-on-surface-variant font-normal">
-                            {" "}in <span className="text-primary-container">{topics.find((t) => t._id === selectedTopicId)?.name}</span>
+                            {" "}in <span className="text-primary-container">{topics.find((t: Doc<"topics">) => t._id === selectedTopicId)?.name}</span>
                           </span>
                         )}
                         {q.trim() && (
@@ -270,7 +271,7 @@ export default function SearchDiscovery() {
 
                 {!isLoading && results && results.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                    {results.map((item) => (
+                    {results.map((item: SearchResultItem) => (
                       <article
                         key={item._id}
                         className="group bg-surface-container-low rounded-xl overflow-hidden flex flex-col cursor-pointer hover:bg-surface-container transition-colors"

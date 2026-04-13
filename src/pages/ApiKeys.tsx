@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
+import { Doc, Id } from "../../convex/_generated/dataModel";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import BottomNav from "../components/BottomNav";
@@ -136,7 +136,7 @@ export default function ApiKeys() {
           )}
 
           <ul className="space-y-3">
-            {keys?.map((key) => (
+            {keys?.map((key: Omit<Doc<"apiKeys">, "keyHash">) => (
               <li
                 key={key._id}
                 className="flex items-center justify-between p-4 bg-surface-container rounded-xl"

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
+import { Doc, Id } from "../../convex/_generated/dataModel";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import BottomNav from "../components/BottomNav";
@@ -67,18 +67,18 @@ export default function MainLibrary() {
   const topicCounts = new Map<string, number>();
   if (allItems && topics) {
     for (const topic of topics) {
-      const count = allItems.filter((item) => item.topicIds.includes(topic._id)).length;
+      const count = allItems.filter((item: Doc<"items">) => item.topicIds.includes(topic._id)).length;
       topicCounts.set(topic._id, count);
     }
   }
 
-  const filteredTopics = topics?.filter((t) =>
+  const filteredTopics = topics?.filter((t: Doc<"topics">) =>
     t.name.toLowerCase().includes(topicSearch.toLowerCase())
   );
 
   function getTopicNames(topicIds: Id<"topics">[]) {
     if (!topics) return [];
-    return topicIds.map((tid) => topics.find((t) => t._id === tid)?.name).filter(Boolean) as string[];
+    return topicIds.map((tid) => topics.find((t: Doc<"topics">) => t._id === tid)?.name).filter(Boolean) as string[];
   }
 
   return (
@@ -131,7 +131,7 @@ export default function MainLibrary() {
           {/* Mobile topic filter — horizontal pills */}
           {topics && topics.length > 0 && (
             <div className="lg:hidden flex gap-2 mb-5 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4">
-              {topics.map((topic) => {
+              {topics.map((topic: Doc<"topics">) => {
                 const active = selectedTopicId === topic._id;
                 return (
                   <button
@@ -183,7 +183,7 @@ export default function MainLibrary() {
                     {filteredTopics === undefined && (
                       <p className="text-xs text-on-surface-variant/50">Loading...</p>
                     )}
-                    {filteredTopics?.map((topic) => {
+                    {filteredTopics?.map((topic: Doc<"topics">) => {
                       const active = selectedTopicId === topic._id;
                       const count = topicCounts.get(topic._id) ?? 0;
                       return (
@@ -247,7 +247,7 @@ export default function MainLibrary() {
               {/* Gallery view */}
               {items && items.length > 0 && viewMode === "gallery" && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                  {items.map((item) => (
+                  {items.map((item: Doc<"items">) => (
                     <article
                       key={item._id}
                       className="group bg-surface-container-lowest rounded-xl overflow-hidden editorial-shadow cursor-pointer flex flex-col"
@@ -292,7 +292,7 @@ export default function MainLibrary() {
               {/* List view */}
               {items && items.length > 0 && viewMode === "list" && (
                 <div className="flex flex-col gap-2">
-                  {items.map((item) => (
+                  {items.map((item: Doc<"items">) => (
                     <article
                       key={item._id}
                       className="group flex items-center gap-4 p-3 rounded-xl hover:bg-surface-container cursor-pointer transition-colors"

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
+import { Doc, Id } from "../../convex/_generated/dataModel";
 import TagChip from "../components/TagChip";
 import BottomNav from "../components/BottomNav";
 import { SKIP_AUTH, getMockItem, MOCK_TOPICS } from "../lib/devMocks";
@@ -97,7 +97,7 @@ export default function ContentPreview() {
     if (!item || !id) return;
     const current = item.topicIds;
     const next = current.includes(topicId)
-      ? current.filter((t) => t !== topicId)
+      ? current.filter((t: Id<"topics">) => t !== topicId)
       : [...current, topicId];
     await updateItem({ id: id as Id<"items">, topicIds: next });
   }
@@ -122,7 +122,7 @@ export default function ContentPreview() {
 
   const itemTopics =
     item && allTopics
-      ? allTopics.filter((t) => item.topicIds.includes(t._id))
+      ? allTopics.filter((t: Doc<"topics">) => item.topicIds.includes(t._id))
       : [];
 
   const notesList = item?.notesList ?? (item?.notes ? [item.notes] : []);
@@ -164,7 +164,7 @@ export default function ContentPreview() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {itemTopics.map((t) => <TagChip key={t._id} label={t.name} />)}
+          {itemTopics.map((t: Doc<"topics">) => <TagChip key={t._id} label={t.name} />)}
           {itemTopics.length === 0 && !showTagPicker && (
             <p className="text-sm text-on-surface-variant/60">No tags yet.</p>
           )}
@@ -174,7 +174,7 @@ export default function ContentPreview() {
           <div className="mt-4 space-y-3">
             {allTopics && allTopics.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {allTopics.map((t) => {
+                {allTopics.map((t: Doc<"topics">) => {
                   const active = item!.topicIds.includes(t._id);
                   return (
                     <button
@@ -248,7 +248,7 @@ export default function ContentPreview() {
       <p className="text-[0.6875rem] font-bold tracking-widest uppercase text-on-surface-variant mb-3">Notes</p>
       {notesList.length > 0 && (
         <ul className="space-y-2 mb-3">
-          {notesList.map((note, i) => (
+          {notesList.map((note: string, i: number) => (
             <li key={i} className="flex items-start gap-2 group">
               <p className="flex-1 text-sm text-on-surface leading-relaxed">{note}</p>
               <button
