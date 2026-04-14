@@ -2,37 +2,17 @@
   "name": "the-library",
   "private": true,
   "version": "0.0.1",
-  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "dev": "vite",
-    "build": "npx convex codegen && tsc -b && vite build",
-    "build:production": "npx convex deploy --cmd 'npm run build' --cmd-url-env-var-name VITE_CONVEX_URL",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "validate": "node scripts/validate.mjs",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "dev:web": "npm run dev -w @the-library/web",
+    "dev:mobile": "npm run start -w @the-library/mobile",
+    "build:web": "npx convex codegen && npm run build -w @the-library/web",
+    "build:production": "npx convex deploy --cmd 'npm run build -w @the-library/web' --cmd-url-env-var-name VITE_CONVEX_URL",
+    "test:web": "npm run test -w @the-library/web",
+    "lint:web": "npm run lint -w @the-library/web"
   },
   "dependencies": {
-    "@auth/core": "^0.37.4",
-    "@convex-dev/auth": "^0.0.91",
     "convex": "^1.34.1",
-    "lucide-react": "^0.469.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-router-dom": "^7.4.0"
-  },
-  "devDependencies": {
-    "@edge-runtime/vm": "^5.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.20",
-    "convex-test": "^0.0.47",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.17",
-    "typescript": "~5.7.2",
-    "vite": "^6.2.0",
-    "vitest": "^4.1.4"
+    "expo-router": "~6.0.23"
   }
 }
