@@ -1,5 +1,4 @@
 .worktrees/
-.env.local
 apps/mobile/.env
 packages/shared/convex/_generated/
 .superpowers/
