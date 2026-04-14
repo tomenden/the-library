@@ -1,0 +1,12 @@
+{
+  "name": "@the-library/shared",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@auth/core": "^0.37.4",
+    "@convex-dev/auth": "^0.0.91",
+    "convex": "^1.34.1"
+  }
+}

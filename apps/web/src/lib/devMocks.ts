@@ -3,7 +3,7 @@
  * Activated by setting VITE_SKIP_AUTH=true in .env.local.
  * Tree-shaken out of production builds when SKIP_AUTH is false.
  */
-import type { Id } from "../../convex/_generated/dataModel";
+import type { Id } from "@convex/_generated/dataModel";
 
 export const SKIP_AUTH = import.meta.env.VITE_SKIP_AUTH === "true";
 

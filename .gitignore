@@ -1,10 +1,18 @@
 .worktrees/
 .env.local
-convex/_generated/
+apps/mobile/.env
+packages/shared/convex/_generated/
 .superpowers/
 dist/
 node_modules/
 .vercel
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
 
 # Agent skill directories (installed on demand like node_modules)
 skills/

@@ -1,7 +1,7 @@
 import { useQuery } from "convex/react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../convex/_generated/api";
-import { Doc } from "../../convex/_generated/dataModel";
+import { api } from "@convex/_generated/api";
+import { Doc } from "@convex/_generated/dataModel";
 import ContentCard from "../components/ContentCard";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";

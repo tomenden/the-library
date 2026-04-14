@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useAction } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { Doc, Id } from "../../convex/_generated/dataModel";
+import { api } from "@convex/_generated/api";
+import { Doc, Id } from "@convex/_generated/dataModel";
 import TagChip from "../components/TagChip";
 import BottomNav from "../components/BottomNav";
 import { SKIP_AUTH, getMockItem, MOCK_TOPICS } from "../lib/devMocks";

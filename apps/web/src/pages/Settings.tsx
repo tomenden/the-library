@@ -1,7 +1,7 @@
 import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate, NavLink } from "react-router-dom";
-import { api } from "../../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import BottomNav from "../components/BottomNav";
