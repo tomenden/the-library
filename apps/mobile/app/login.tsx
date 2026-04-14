@@ -7,26 +7,33 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useConvexAuth } from "convex/react";
 import * as WebBrowser from "expo-web-browser";
-import { useRouter } from "expo-router";
+import * as Linking from "expo-linking";
+import { Redirect, useRouter } from "expo-router";
+
+const REDIRECT_URI = Linking.createURL("/");
 
 export default function LoginScreen() {
   const { signIn } = useAuthActions();
+  const { isAuthenticated } = useConvexAuth();
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)" />;
+  }
 
   async function handleGoogleSignIn() {
     setIsLoading(true);
     try {
-      const result = await signIn("google");
+      const result = await signIn("google", { redirectTo: REDIRECT_URI });
       if (result.redirect) {
-        // Open the OAuth URL in an in-app browser
         const browserResult = await WebBrowser.openAuthSessionAsync(
           result.redirect.toString(),
-          "the-library://",
+          REDIRECT_URI,
         );
         if (browserResult.type === "success" && browserResult.url) {
-          // Extract the authorization code from the callback URL
           const url = new URL(browserResult.url);
           const code = url.searchParams.get("code");
           if (code) {
@@ -35,7 +42,6 @@ export default function LoginScreen() {
           }
         }
       } else if (result.signingIn) {
-        // Already signed in (token was valid)
         router.replace("/(tabs)");
       }
     } catch (err) {
