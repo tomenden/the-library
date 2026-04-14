@@ -4,12 +4,12 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  ScrollView,
   Image,
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@the-library/shared/convex/_generated/api";
@@ -18,10 +18,10 @@ import type { Doc, Id } from "@the-library/shared/convex/_generated/dataModel";
 type Tab = "all" | "unread" | "favorites" | "archive";
 
 const tabs: { key: Tab; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "unread", label: "Unread" },
-  { key: "favorites", label: "Favorites" },
-  { key: "archive", label: "Archive" },
+  { key: "all", label: "ALL" },
+  { key: "unread", label: "UNREAD" },
+  { key: "favorites", label: "FAVORITES" },
+  { key: "archive", label: "ARCHIVE" },
 ];
 
 function getFilter(tab: Tab) {
@@ -41,6 +41,7 @@ export default function LibraryScreen() {
   const [activeTab, setActiveTab] = useState<Tab>("all");
   const [selectedTopicId, setSelectedTopicId] = useState<Id<"topics"> | undefined>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const filter = { ...getFilter(activeTab), topicId: selectedTopicId };
   const items = useQuery(api.items.list, filter);
@@ -87,14 +88,11 @@ export default function LibraryScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <Text style={styles.screenTitle}>Library</Text>
+
       {/* Tabs */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.tabBar}
-        contentContainerStyle={styles.tabBarContent}
-      >
+      <View style={styles.tabBar}>
         {tabs.map(({ key, label }) => (
           <TouchableOpacity
             key={key}
@@ -114,16 +112,11 @@ export default function LibraryScreen() {
             </Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
 
       {/* Topic filter pills */}
       {topics && topics.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.topicBar}
-          contentContainerStyle={styles.topicBarContent}
-        >
+        <View style={styles.topicBar}>
           {topics.map((topic: Doc<"topics">) => {
             const active = selectedTopicId === topic._id;
             return (
@@ -153,7 +146,7 @@ export default function LibraryScreen() {
               <Text style={styles.clearPillText}>Clear</Text>
             </TouchableOpacity>
           )}
-        </ScrollView>
+        </View>
       )}
 
       {/* Items list */}
@@ -194,17 +187,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f9f9f7",
   },
+  screenTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#1a1c1b",
+    textAlign: "center",
+    paddingVertical: 12,
+  },
   tabBar: {
-    flexGrow: 0,
+    flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: "#e2e3e1",
-  },
-  tabBarContent: {
     paddingHorizontal: 16,
   },
   tab: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 2,
     borderBottomColor: "transparent",
   },
@@ -212,23 +210,20 @@ const styles = StyleSheet.create({
     borderBottomColor: "#1b3a36",
   },
   tabText: {
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 1,
     color: "#717977",
   },
   tabTextActive: {
     color: "#1b3a36",
   },
   topicBar: {
-    flexGrow: 0,
-    marginTop: 12,
-  },
-  topicBarContent: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     paddingHorizontal: 16,
     gap: 8,
-    flexDirection: "row",
+    marginTop: 12,
   },
   topicPill: {
     backgroundColor: "#e8e8e6",

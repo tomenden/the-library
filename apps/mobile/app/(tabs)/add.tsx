@@ -11,17 +11,15 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { useMutation, useQuery } from "convex/react";
+import { useAction } from "convex/react";
 import { api } from "@the-library/shared/convex/_generated/api";
-import type { Doc, Id } from "@the-library/shared/convex/_generated/dataModel";
 
 export default function AddScreen() {
   const [url, setUrl] = useState("");
+  const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedTopicIds, setSelectedTopicIds] = useState<Id<"topics">[]>([]);
 
-  const topics = useQuery(api.topics.list, {});
-  const createItem = useMutation(api.items.create);
+  const ingestItem = useAction(api.actions.ingest.ingestItem);
 
   async function handleSave() {
     const trimmed = url.trim();
@@ -29,14 +27,21 @@ export default function AddScreen() {
 
     setIsSaving(true);
     try {
-      await createItem({
+      const result = await ingestItem({
         url: trimmed,
-        topicIds: selectedTopicIds,
+        notes: notes.trim() || undefined,
       });
 
       setUrl("");
-      setSelectedTopicIds([]);
-      Alert.alert("Saved!", "The link has been added to your library.");
+      setNotes("");
+      if (result?.enrichmentFailed) {
+        Alert.alert(
+          "Saved with limited info",
+          "The link was saved but AI enrichment couldn't process it. You can retry later."
+        );
+      } else {
+        Alert.alert("Saved!", "The link has been added to your library.");
+      }
     } catch (err: unknown) {
       Alert.alert(
         "Error",
@@ -45,12 +50,6 @@ export default function AddScreen() {
     } finally {
       setIsSaving(false);
     }
-  }
-
-  function toggleTopic(id: Id<"topics">) {
-    setSelectedTopicIds((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
-    );
   }
 
   return (
@@ -64,7 +63,7 @@ export default function AddScreen() {
       >
         <Text style={styles.heading}>Save a Link</Text>
         <Text style={styles.subtitle}>
-          Paste a URL and we'll enrich it with AI.
+          Paste a URL and AI will analyse the content automatically.
         </Text>
 
         <TextInput
@@ -76,39 +75,17 @@ export default function AddScreen() {
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
-          returnKeyType="done"
+          returnKeyType="next"
         />
 
-        {/* Topic selection */}
-        {topics && topics.length > 0 && (
-          <View style={styles.topicSection}>
-            <Text style={styles.topicSectionLabel}>Add to topics</Text>
-            <View style={styles.topicGrid}>
-              {topics.map((topic: Doc<"topics">) => {
-                const selected = selectedTopicIds.includes(topic._id);
-                return (
-                  <TouchableOpacity
-                    key={topic._id}
-                    onPress={() => toggleTopic(topic._id)}
-                    style={[
-                      styles.topicChip,
-                      selected && styles.topicChipSelected,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.topicChipText,
-                        selected && styles.topicChipTextSelected,
-                      ]}
-                    >
-                      {topic.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        )}
+        <TextInput
+          style={styles.notesInput}
+          placeholder="Add a personal note (optional)"
+          placeholderTextColor="#717977"
+          value={notes}
+          onChangeText={setNotes}
+          multiline
+        />
 
         <TouchableOpacity
           style={[styles.saveButton, (!url.trim() || isSaving) && styles.saveButtonDisabled]}
@@ -117,9 +94,12 @@ export default function AddScreen() {
           activeOpacity={0.8}
         >
           {isSaving ? (
-            <ActivityIndicator color="#ffffff" />
+            <View style={styles.savingRow}>
+              <ActivityIndicator color="#ffffff" />
+              <Text style={styles.saveButtonText}>Analysing…</Text>
+            </View>
           ) : (
-            <Text style={styles.saveButtonText}>Save to Library</Text>
+            <Text style={styles.saveButtonText}>Save with AI</Text>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -154,45 +134,33 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     fontSize: 16,
     color: "#1a1c1b",
-    marginBottom: 24,
+    marginBottom: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 1,
   },
-  topicSection: {
+  notesInput: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: "#1a1c1b",
     marginBottom: 32,
+    minHeight: 60,
+    textAlignVertical: "top",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  topicSectionLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    color: "#717977",
-    marginBottom: 12,
-  },
-  topicGrid: {
+  savingRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
     gap: 8,
-  },
-  topicChip: {
-    backgroundColor: "#e8e8e6",
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  topicChipSelected: {
-    backgroundColor: "#c8e9e3",
-  },
-  topicChipText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#414847",
-  },
-  topicChipTextSelected: {
-    color: "#00201d",
   },
   saveButton: {
     backgroundColor: "#032421",

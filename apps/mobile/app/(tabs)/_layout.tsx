@@ -30,6 +30,7 @@ export default function TabLayout() {
         headerStyle: {
           backgroundColor: "#f9f9f7",
         },
+        headerShadowVisible: false,
         headerTintColor: "#1a1c1b",
       }}
     >
@@ -37,6 +38,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Library",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="library-outline" size={size} color={color} />
           ),
