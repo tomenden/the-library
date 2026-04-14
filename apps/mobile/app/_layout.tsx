@@ -14,9 +14,9 @@ function ShareIntentHandler({ children }: { children: React.ReactNode }) {
     if (hasShareIntent && segments[0] !== "share") {
       router.push("/share");
     }
-  }, [hasShareIntent]);
+  }, [hasShareIntent, segments, router]);
 
-  return <>{children}</>;
+  return children as React.ReactElement;
 }
 
 export default function RootLayout() {

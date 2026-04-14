@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   Image,
   StyleSheet,
   ActivityIndicator,
-  RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -54,44 +53,44 @@ export default function LibraryScreen() {
       .filter(Boolean) as string[];
   }
 
-  const renderItem = ({ item }: { item: Doc<"items"> }) => (
-    <TouchableOpacity
-      style={styles.card}
-      activeOpacity={0.7}
-      onPress={() => router.push(`/item/${item._id}`)}
-    >
-      {item.imageUrl && (
-        <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
-      )}
-      <View style={styles.cardContent}>
-        {getTopicNames(item.topicIds).length > 0 && (
-          <Text style={styles.topicLabel}>
-            {getTopicNames(item.topicIds)[0]}
+  const renderItem = useCallback(({ item }: { item: Doc<"items"> }) => {
+    const topicName = getTopicNames(item.topicIds)[0];
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.7}
+        onPress={() => router.push(`/item/${item._id}`)}
+      >
+        {item.imageUrl && (
+          <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
+        )}
+        <View style={styles.cardContent}>
+          {topicName && (
+            <Text style={styles.topicLabel}>{topicName}</Text>
+          )}
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {item.title ?? "Untitled"}
           </Text>
+          {item.summary && (
+            <Text style={styles.cardSummary} numberOfLines={2}>
+              {item.summary}
+            </Text>
+          )}
+          {item.sourceName && (
+            <Text style={styles.sourceName}>{item.sourceName}</Text>
+          )}
+        </View>
+        {item.isFavorite && (
+          <Text style={styles.favoriteStar}>★</Text>
         )}
-        <Text style={styles.cardTitle} numberOfLines={2}>
-          {item.title ?? "Untitled"}
-        </Text>
-        {item.summary && (
-          <Text style={styles.cardSummary} numberOfLines={2}>
-            {item.summary}
-          </Text>
-        )}
-        {item.sourceName && (
-          <Text style={styles.sourceName}>{item.sourceName}</Text>
-        )}
-      </View>
-      {item.isFavorite && (
-        <Text style={styles.favoriteStar}>★</Text>
-      )}
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  }, [topics, router]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Text style={styles.screenTitle}>Library</Text>
 
-      {/* Tabs */}
       <View style={styles.tabBar}>
         {tabs.map(({ key, label }) => (
           <TouchableOpacity
@@ -114,7 +113,6 @@ export default function LibraryScreen() {
         ))}
       </View>
 
-      {/* Topic filter pills */}
       {topics && topics.length > 0 && (
         <View style={styles.topicBar}>
           {topics.map((topic: Doc<"topics">) => {
@@ -149,7 +147,6 @@ export default function LibraryScreen() {
         </View>
       )}
 
-      {/* Items list */}
       {items === undefined ? (
         <ActivityIndicator style={styles.loader} color="#032421" />
       ) : (
@@ -172,9 +169,6 @@ export default function LibraryScreen() {
                         : "Your library is empty."}
               </Text>
             </View>
-          }
-          refreshControl={
-            <RefreshControl refreshing={false} onRefresh={() => {}} />
           }
         />
       )}

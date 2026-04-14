@@ -86,7 +86,7 @@ export default function ShareScreen() {
         {status === "success" && (
           <>
             <Text style={styles.icon}>
-              {enrichmentFailed ? "\u26A0\uFE0F" : "\u2705"}
+              {enrichmentFailed ? "⚠️" : "✅"}
             </Text>
             <Text style={styles.title}>
               {enrichmentFailed ? "Saved with limited info" : "Saved!"}
@@ -104,7 +104,7 @@ export default function ShareScreen() {
 
         {status === "error" && (
           <>
-            <Text style={styles.icon}>{"\u274C"}</Text>
+            <Text style={styles.icon}>{"❌"}</Text>
             <Text style={styles.title}>Something went wrong</Text>
             <Text style={styles.subtitle}>{errorMsg}</Text>
             <TouchableOpacity style={styles.button} onPress={handleDone}>
@@ -115,7 +115,7 @@ export default function ShareScreen() {
 
         {status === "no-url" && (
           <>
-            <Text style={styles.icon}>{"\uD83D\uDD17"}</Text>
+            <Text style={styles.icon}>{"🔗"}</Text>
             <Text style={styles.title}>No URL found</Text>
             <Text style={styles.subtitle}>
               Share a link from your browser or another app.
