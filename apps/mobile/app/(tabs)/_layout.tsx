@@ -1,7 +1,23 @@
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useConvexAuth } from "convex/react";
+import { ActivityIndicator, View } from "react-native";
 
 export default function TabLayout() {
+  const { isLoading, isAuthenticated } = useConvexAuth();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f9f9f7" }}>
+        <ActivityIndicator color="#032421" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
+
   return (
     <Tabs
       screenOptions={{

@@ -1,9 +1,13 @@
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useQuery } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { useRouter } from "expo-router";
 import { api } from "@the-library/shared/convex/_generated/api";
 
 export default function SettingsScreen() {
   const user = useQuery(api.users.viewer, {});
+  const { signOut } = useAuthActions();
+  const router = useRouter();
 
   function handleLogout() {
     Alert.alert("Logout", "Are you sure you want to log out?", [
@@ -11,8 +15,9 @@ export default function SettingsScreen() {
       {
         text: "Log Out",
         style: "destructive",
-        onPress: () => {
-          // TODO: implement logout with expo-auth-session
+        onPress: async () => {
+          await signOut();
+          router.replace("/login");
         },
       },
     ]);
