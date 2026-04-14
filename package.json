@@ -7,7 +7,7 @@
     "dev:web": "npm run dev -w @the-library/web",
     "dev:mobile": "npm run start -w @the-library/mobile",
     "build:web": "npx convex codegen && npm run build -w @the-library/web",
-    "build:production": "npx convex deploy --cmd 'npm run build -w @the-library/web' --cmd-url-env-var-name VITE_CONVEX_URL",
+    "build:production": "npx convex deploy --cmd 'npx convex codegen && npm run build -w @the-library/web' --cmd-url-env-var-name VITE_CONVEX_URL",
     "test:web": "npm run test -w @the-library/web",
     "lint:web": "npm run lint -w @the-library/web"
   },
