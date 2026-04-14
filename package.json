@@ -12,7 +12,6 @@
     "lint:web": "npm run lint -w @the-library/web"
   },
   "dependencies": {
-    "convex": "^1.34.1",
-    "expo-router": "~6.0.23"
+    "convex": "^1.34.1"
   }
 }
