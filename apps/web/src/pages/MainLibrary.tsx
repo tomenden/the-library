@@ -84,7 +84,7 @@ export default function MainLibrary() {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <div className="md:ml-48 flex-1 flex flex-col transition-all duration-300">
+      <div className="md:ml-48 flex-1 flex flex-col transition-all duration-300 overflow-x-hidden">
         <TopBar />
         <main className="px-4 md:px-8 pt-4 md:pt-6 pb-28 md:pb-8 max-w-[1400px] mx-auto w-full">
           {/* Page heading + view toggle */}
@@ -254,9 +254,9 @@ export default function MainLibrary() {
                       onClick={() => navigate(`/preview/${item._id}`)}
                     >
                       {item.imageUrl && (
-                        <div className="aspect-[16/10] overflow-hidden">
+                        <div className="aspect-[16/10] overflow-hidden bg-surface-container">
                           <img
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
                             src={item.imageUrl}
                             alt={item.title ?? ""}
                           />
@@ -299,7 +299,7 @@ export default function MainLibrary() {
                       onClick={() => navigate(`/preview/${item._id}`)}
                     >
                       {item.imageUrl ? (
-                        <img className="w-16 h-16 md:w-20 md:h-14 rounded-lg object-cover flex-shrink-0" src={item.imageUrl} alt="" />
+                        <img className="w-16 h-16 md:w-20 md:h-14 rounded-lg object-contain bg-surface-container flex-shrink-0" src={item.imageUrl} alt="" />
                       ) : (
                         <div className="w-16 h-16 md:w-20 md:h-14 rounded-lg bg-surface-container-high flex-shrink-0 flex items-center justify-center">
                           <span className="material-symbols-outlined text-on-surface-variant/30">article</span>
