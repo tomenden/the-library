@@ -110,7 +110,7 @@ GET /api/items?isFavorite=true
 GET /api/items?contentType=video
 ```
 
-**Response:** `200 OK` — array of item objects.
+**Response:** `200 OK` — array of item objects, ordered newest first (by creation time, descending).
 
 ### GET /api/items/search — Semantic search
 

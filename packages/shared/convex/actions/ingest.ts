@@ -121,6 +121,126 @@ export function extractTwitterImageUrl(data: any): string | undefined {
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+const YOUTUBE_HOSTS = new Set([
+  "youtube.com",
+  "m.youtube.com",
+  "music.youtube.com",
+  "youtu.be",
+]);
+
+export function isYouTubeUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    return YOUTUBE_HOSTS.has(host);
+  } catch {
+    return false;
+  }
+}
+
+export function extractYouTubeVideoId(url: string): string | undefined {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return undefined;
+  }
+  const host = parsed.hostname.replace(/^www\./, "");
+  if (!YOUTUBE_HOSTS.has(host)) return undefined;
+
+  if (host === "youtu.be") {
+    const id = parsed.pathname.slice(1).split("/")[0];
+    return id || undefined;
+  }
+
+  const v = parsed.searchParams.get("v");
+  if (v) return v;
+
+  const shortsMatch = parsed.pathname.match(/^\/shorts\/([^/?#]+)/);
+  if (shortsMatch) return shortsMatch[1];
+
+  const embedMatch = parsed.pathname.match(/^\/embed\/([^/?#]+)/);
+  if (embedMatch) return embedMatch[1];
+
+  return undefined;
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export function extractYouTubeDescription(html: string): string | undefined {
+  const playerMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\});/);
+  if (playerMatch) {
+    try {
+      const parsed = JSON.parse(playerMatch[1]);
+      const desc = parsed?.videoDetails?.shortDescription;
+      if (typeof desc === "string" && desc.trim()) return desc;
+    } catch {
+      // fall through to meta-based extraction
+    }
+  }
+
+  const og = metaContent(html, "property", "og:description");
+  if (og?.[1]) return og[1];
+
+  const tw = metaContent(html, "name", "twitter:description");
+  if (tw?.[1]) return tw[1];
+
+  return undefined;
+}
+
+export function composeYouTubeText(oembed: any, description?: string): string {
+  const title = oembed?.title ?? "";
+  const author = oembed?.author_name ?? "";
+  const header = author ? `Video: "${title}" by ${author}` : `Video: "${title}"`;
+  const body = description?.trim() ?? "";
+  return body ? `${header}\n\n${body}` : header;
+}
+
+function upgradeYouTubeThumbnail(thumbnailUrl: string | undefined, videoId: string | undefined): string | undefined {
+  if (videoId) return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+  return thumbnailUrl;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+async function fetchYouTubeContent(
+  url: string
+): Promise<{ text: string; imageUrl?: string }> {
+  const videoId = extractYouTubeVideoId(url);
+  if (!videoId) {
+    throw new Error(`Could not extract YouTube video id from URL: ${url}`);
+  }
+  const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(watchUrl)}&format=json`;
+
+  const oembedRes = await fetch(oembedUrl, {
+    headers: { "User-Agent": "TheLibrary/1.0" },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!oembedRes.ok) {
+    throw new Error(`YouTube oEmbed error (${oembedRes.status}): ${oembedUrl}`);
+  }
+  const oembed = await oembedRes.json();
+
+  let description: string | undefined;
+  try {
+    const pageRes = await fetch(watchUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; TheLibrary/1.0; +https://the-library-sigma.vercel.app)",
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (pageRes.ok) {
+      const html = await pageRes.text();
+      description = extractYouTubeDescription(html);
+    }
+  } catch (e) {
+    console.error("YouTube watch page fetch failed:", e);
+  }
+
+  const text = composeYouTubeText(oembed, description);
+  const imageUrl = upgradeYouTubeThumbnail(oembed?.thumbnail_url, videoId);
+  return { text: truncateHtml(text, 15000), imageUrl };
+}
+
 async function fetchTwitterContent(
   url: string
 ): Promise<{ text: string; imageUrl?: string }> {
@@ -288,6 +408,16 @@ async function enrichUrl(url: string, existingTopics: string[]): Promise<Enrichm
       imageUrl = twitter.imageUrl;
     } catch (e) {
       console.error("FxTwitter fetch failed, falling back to direct fetch:", e);
+      ({ content, imageUrl } = await fetchHtmlContent(url));
+    }
+  } else if (isYouTubeUrl(url)) {
+    // YouTube is JS-rendered; use oEmbed + targeted HTML parse for description
+    try {
+      const youtube = await fetchYouTubeContent(url);
+      content = youtube.text;
+      imageUrl = youtube.imageUrl;
+    } catch (e) {
+      console.error("YouTube fetch failed, falling back to direct fetch:", e);
       ({ content, imageUrl } = await fetchHtmlContent(url));
     }
   } else {

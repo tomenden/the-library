@@ -251,6 +251,7 @@ async function listHandler(ctx: any, args: any): Promise<any[]> {
   let items = await ctx.db
     .query("items")
     .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .order("desc")
     .collect();
 
   if (status) items = items.filter((i: any) => i.status === status);
